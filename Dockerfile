@@ -24,4 +24,4 @@ COPY models /app/models
 ENV MODEL_DIR=/app/models
 EXPOSE 8080
 
-CMD ["uvicorn", "app.deploy:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+CMD ["sh", "-c", "uvicorn app.deploy:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1"]

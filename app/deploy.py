@@ -2,21 +2,25 @@
 import os
 import pickle
 import logging
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
+import asyncio
 from contextlib import asynccontextmanager
-from item_cf import recommend_similar_items
-from fastapi import Body, Query
 
+from fastapi import FastAPI, HTTPException, Body, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from scipy.sparse import load_npz
+
+from src.item_cf import recommend_similar_items_new
+from app.book_info import get_book_info  # <--- import new module
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("uvicorn.error")
 
-MODEL_DIR = os.environ.get("MODEL_DIR") or os.path.join(os.path.dirname(__file__), "..", "models")
-MODEL_DIR = os.path.abspath(MODEL_DIR)
-ITEM_SIM_PATH = os.path.join(MODEL_DIR, "item_sim_matrix.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.environ.get("MODEL_DIR") or os.path.join(BASE_DIR, "..", "models")
+ITEM_SIM_PATH = os.path.join(MODEL_DIR, "topk_item_sim.npz")
 ITEM_ENCODER_PATH = os.path.join(MODEL_DIR, "item_encoder.pkl")
 
-# In-memory placeholders
 item_sim_matrix = None
 item_encoder = None
 models_loaded = False
@@ -26,130 +30,92 @@ class BookRequest(BaseModel):
     book_title: str
     top_k: int = 10
 
-# Lifespan handler to replace deprecated on_event("startup")
+# --- FastAPI lifespan ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global item_sim_matrix, item_encoder, models_loaded, book_titles_list
-    # Startup logic
-    try:
-        with open(ITEM_SIM_PATH, "rb") as f:
-            item_sim_matrix = pickle.load(f)
-        logger.info(f"Loaded item_sim_matrix from {ITEM_SIM_PATH}")
-    except Exception as e:
-        logger.error(f"Failed to load item_sim_matrix: {e}")
-        item_sim_matrix = None
+    logger.info(f"Starting startup sequence. Looking for models in: {MODEL_DIR}")
 
     try:
-        with open(ITEM_ENCODER_PATH, "rb") as f:
-            item_encoder = pickle.load(f)
-        logger.info(f"Loaded item_encoder from {ITEM_ENCODER_PATH}")
-        
-        # Extract book titles from encoder
-        if hasattr(item_encoder, 'classes_'):
-            book_titles_list = sorted(item_encoder.classes_.tolist())
-            logger.info(f"Extracted {len(book_titles_list)} book titles from encoder")
-        else:
-            logger.warning("item_encoder does not have 'classes_' attribute")
-            
+        if os.path.exists(ITEM_SIM_PATH):
+            item_sim_matrix = load_npz(ITEM_SIM_PATH)
+            logger.info(f"Loaded item_sim_matrix from {ITEM_SIM_PATH}")
+    except Exception as e:
+        logger.error(f"Failed to load item_sim_matrix: {e}")
+
+    try:
+        if os.path.exists(ITEM_ENCODER_PATH):
+            with open(ITEM_ENCODER_PATH, "rb") as f:
+                item_encoder = pickle.load(f)
+            logger.info(f"Loaded item_encoder from {ITEM_ENCODER_PATH}")
+            if hasattr(item_encoder, "classes_"):
+                book_titles_list = sorted(item_encoder.classes_.tolist())
     except Exception as e:
         logger.error(f"Failed to load item_encoder: {e}")
-        item_encoder = None
 
     models_loaded = item_sim_matrix is not None and item_encoder is not None
     if not models_loaded:
-        logger.warning("Models not fully loaded; endpoints will return 503 until resolved.")
+        logger.warning("⚠️ MODELS NOT LOADED.")
 
-    yield  # control passes to FastAPI app while running
-
-    # Shutdown logic (optional)
+    yield
     logger.info("Shutting down API...")
 
-# Initialize FastAPI with lifespan
-app = FastAPI(title="Item-based CF API", lifespan=lifespan)
-
-# Allow CORS for frontend (replace "*" with your domain in production)
+# --- FastAPI setup ---
+app = FastAPI(title="BookVerse Recommendation API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_origins=[
+        "https://cassiopeiai.com",
+        "https://saricmilos.com",
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 @app.get("/")
-def root():
-    return {"message": "API is up. Welcome to book recommender!"}
+async def root():
+    return {"status": "online", "models_loaded": models_loaded, "total_books": len(book_titles_list)}
 
-@app.get("/search_books/")
+@app.get("/search_books")
 def search_books(query: str, limit: int = 20):
-    """
-    Search for books by title prefix/substring.
-    Returns matching book titles for autocomplete.
-    """
     if not models_loaded:
-        raise HTTPException(status_code=503, detail="Models not loaded on server.")
-    
-    if not book_titles_list:
-        raise HTTPException(status_code=500, detail="Book titles not available.")
-    
-    # Validate query
+        raise HTTPException(status_code=503, detail="Server initializing models.")
     query = query.strip()
-    if len(query) < 1:
-        raise HTTPException(status_code=400, detail="Query must be at least 1 character.")
-    
-    # Search for matches (case-insensitive)
+    if not query:
+        return {"query": query, "results": [], "total_matches": 0}
     query_lower = query.lower()
-    matches = [
-        title for title in book_titles_list 
-        if query_lower in title.lower()
-    ]
-    
-    # Limit results
-    matches = matches[:limit]
-    
-    logger.info(f"Search query '{query}' returned {len(matches)} results")
-    
-    return {
-        "query": query,
-        "results": matches,
-        "total_matches": len(matches)
-    }
+    matches = [title for title in book_titles_list if query_lower in title.lower()]
+    return {"query": query, "results": matches[:limit], "total_matches": len(matches)}
 
-
-@app.api_route("/recommend_books/", methods=["GET", "POST"])
-def recommend_books(
-    book_title: str = Query(None),
-    top_k: int = Query(10),
-    request_body: BookRequest = Body(None)
-):
+@app.api_route("/recommend_books", methods=["GET", "POST"])
+async def recommend_books(book_title: str = Query(None), top_k: int = Query(10), request_body: BookRequest = Body(None)):
     if not models_loaded:
-        raise HTTPException(status_code=503, detail="Models not loaded on server.")
+        raise HTTPException(status_code=503, detail="Models not loaded.")
 
-    if request_body:
-        book_title = request_body.book_title
-        top_k = request_body.top_k
-
-    if not book_title:
+    target_title = request_body.book_title if request_body else book_title
+    target_k = request_body.top_k if request_body else top_k
+    if not target_title:
         raise HTTPException(status_code=400, detail="book_title is required.")
 
     try:
-        recommendations = recommend_similar_items(
-            item_title=book_title,
+        recommendations = recommend_similar_items_new(
+            item_title=target_title,
             item_encoder=item_encoder,
             item_sim_matrix=item_sim_matrix,
-            k=top_k,
+            k=target_k,
         )
+        tasks = [get_book_info(t) for t in [target_title] + list(recommendations)]
+        results = await asyncio.gather(*tasks)
+        return {"book_title": results[0], "recommendations": results[1:]}
     except ValueError:
-        raise HTTPException(status_code=404, detail=f"Book '{book_title}' not found.")
+        raise HTTPException(status_code=404, detail=f"Book '{target_title}' not in database.")
     except Exception as e:
-        logger.exception("Unexpected error during recommendation")
+        logger.exception("Recommendation failure")
         raise HTTPException(status_code=500, detail="Internal server error")
-
-    return {"book_title": book_title, "recommendations": list(recommendations)}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "deploy:app",
-        host="0.0.0.0",
-        port=8000
-    )
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("deploy:app", host="0.0.0.0", port=port)
