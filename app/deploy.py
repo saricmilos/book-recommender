@@ -70,8 +70,13 @@ app = FastAPI(title="Item-based CF API", lifespan=lifespan)
 # Allow CORS for frontend (replace "*" with your domain in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST", "OPTIONS"],
+        allow_origins=[
+        "https://cassiopeiai.com",
+        "https://saricmilos.com",
+        "http://localhost:3000",   # keep for local dev
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
