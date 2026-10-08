@@ -181,3 +181,20 @@ def recommend_similar_items(item_title, item_encoder, item_sim_matrix, k=10):
     top_idx = [i for i in top_idx if i != item_idx][:k]
     return item_encoder.inverse_transform(top_idx)
 
+def recommend_similar_items_new(item_title, item_encoder, item_sim_matrix, k=10):
+    # Get item index
+    item_idx = item_encoder.transform([item_title])[0]
+
+    # Get similarity row as dense array
+    sims = item_sim_matrix[item_idx].toarray().flatten()
+    sims[item_idx] = -1e9
+
+    # Efficient top-k
+    if k < len(sims):
+        top_idx = np.argpartition(-sims, k)[:k]  # get k largest
+        top_idx = top_idx[np.argsort(-sims[top_idx])]  # sort top-k properly
+    else:
+        top_idx = np.argsort(-sims)[::-1]
+
+    # Return titles
+    return item_encoder.inverse_transform(top_idx)

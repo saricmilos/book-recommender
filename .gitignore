@@ -29,7 +29,7 @@ Thumbs.db
 *.png
 *.jpg
 
-# Pdfs and Saved Models
+# Saved Models
 *.pkl
 
 # Latex
@@ -43,3 +43,5 @@ Thumbs.db
 *.snm
 *.toc
 *.out
+# Packaging metadata from pip install -e
+*.egg-info/
