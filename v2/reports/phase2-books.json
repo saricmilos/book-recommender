@@ -1,0 +1,175 @@
+{
+  "split": {
+    "fingerprint": "f903c96ffabb8128",
+    "users": 2272,
+    "books": 2405,
+    "train": 45145,
+    "test": 11091
+  },
+  "rating": [
+    {
+      "model": "Global mean",
+      "mae": 1.3850527450032883,
+      "rmse": 1.77829940443538
+    },
+    {
+      "model": "User mean",
+      "mae": 1.1805367772511954,
+      "rmse": 1.5724212800626811
+    },
+    {
+      "model": "Book mean",
+      "mae": 1.3687113600955647,
+      "rmse": 1.7452057807574266
+    },
+    {
+      "model": "Bias baseline",
+      "mae": 1.1696937204448163,
+      "rmse": 1.5288695989303749
+    },
+    {
+      "model": "v1 user-based CF, as shipped",
+      "mae": 7.366553136720112,
+      "rmse": 7.620758605775375
+    },
+    {
+      "model": "v1 user-based CF, corrected",
+      "mae": 1.2561758095820936,
+      "rmse": 1.6766758237626465
+    },
+    {
+      "model": "v1 item-based CF, as shipped",
+      "mae": 5.112629904887673,
+      "rmse": 6.26346119378068
+    },
+    {
+      "model": "v1 item-based CF, corrected",
+      "mae": 1.2596139837605629,
+      "rmse": 1.684026155482977
+    }
+  ],
+  "ranking": {
+    "k": 10,
+    "relevant_from": 4,
+    "users": 2271,
+    "rows": [
+      {
+        "model": "Random",
+        "precision": 0.0017173051519154558,
+        "recall": 0.0025086524934998006,
+        "ndcg": 0.0023297737273822333,
+        "hit_rate": 0.015852047556142668,
+        "coverage": 1.0,
+        "mean_popularity": 18.603963011889036,
+        "users": 2271
+      },
+      {
+        "model": "Most popular",
+        "precision": 0.01809775429326288,
+        "recall": 0.044484197268090636,
+        "ndcg": 0.033379820102279155,
+        "hit_rate": 0.16248348745046234,
+        "coverage": 0.00997920997920998,
+        "mean_popularity": 139.97472479084107,
+        "users": 2271
+      },
+      {
+        "model": "Book mean",
+        "precision": 0.0013650374284456188,
+        "recall": 0.0024216040332288684,
+        "ndcg": 0.0015922427580224463,
+        "hit_rate": 0.013210039630118891,
+        "coverage": 0.005405405405405406,
+        "mean_popularity": 9.511404667547335,
+        "users": 2271
+      },
+      {
+        "model": "Bias baseline",
+        "precision": 0.010259797446059003,
+        "recall": 0.021888067704564713,
+        "ndcg": 0.0166720065536564,
+        "hit_rate": 0.083223249669749,
+        "coverage": 0.01704781704781705,
+        "mean_popularity": 84.88894760017612,
+        "users": 2271
+      },
+      {
+        "model": "v1 user-based CF, as shipped",
+        "precision": 0.04147952443857332,
+        "recall": 0.09152037211490993,
+        "ndcg": 0.08739643400770239,
+        "hit_rate": 0.28269484808454426,
+        "coverage": 0.8203742203742204,
+        "mean_popularity": 52.86917657419639,
+        "users": 2271
+      },
+      {
+        "model": "v1 user-based CF, corrected",
+        "precision": 0.007881990312637603,
+        "recall": 0.017857856297022436,
+        "ndcg": 0.012316068375108728,
+        "hit_rate": 0.0722148833113166,
+        "coverage": 0.716008316008316,
+        "mean_popularity": 39.64887714663144,
+        "users": 2271
+      },
+      {
+        "model": "v1 item-based CF, as shipped",
+        "precision": 0.018670189343901366,
+        "recall": 0.04817709225545084,
+        "ndcg": 0.03568216908123724,
+        "hit_rate": 0.16160281814178776,
+        "coverage": 0.9201663201663202,
+        "mean_popularity": 41.24125935711141,
+        "users": 2271
+      },
+      {
+        "model": "v1 item-based CF, corrected",
+        "precision": 0.008542492294143549,
+        "recall": 0.020584647010748493,
+        "ndcg": 0.01440392265853087,
+        "hit_rate": 0.07617789520035227,
+        "coverage": 0.6698544698544698,
+        "mean_popularity": 20.619638925583445,
+        "users": 2271
+      },
+      {
+        "model": "v1 API table: dot product, top 50",
+        "precision": 0.04227212681638045,
+        "recall": 0.10175100689817003,
+        "ndcg": 0.08776477312488844,
+        "hit_rate": 0.30735358872743285,
+        "coverage": 0.19251559251559253,
+        "mean_popularity": 109.20871862615589,
+        "users": 2271
+      },
+      {
+        "model": "Cosine table, top 50 (what v1 measured)",
+        "precision": 0.04227212681638045,
+        "recall": 0.10035715501675462,
+        "ndcg": 0.09165065582783012,
+        "hit_rate": 0.2804931748128578,
+        "coverage": 0.7018711018711019,
+        "mean_popularity": 23.21585204755614,
+        "users": 2271
+      }
+    ],
+    "v1_user_cf_users_tied_at_k": 1146
+  },
+  "changes": {
+    "v1_titles": 2508,
+    "books": 2405,
+    "titles_with_html_codes": 27,
+    "books_merging_several_v1_titles": 173,
+    "v1_titles_split_by_author": 75,
+    "repeat_ratings_averaged": 478,
+    "held_out_dropped_as_already_read": 253
+  },
+  "environment": {
+    "python": "3.14.2",
+    "numpy": "2.3.4",
+    "pandas": "2.3.3",
+    "scipy": "1.16.3",
+    "scikit-learn": "1.7.2"
+  }
+}

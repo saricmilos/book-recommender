@@ -57,11 +57,12 @@ didn't rate the book, which v1's item-based model already did.
 ## Recommending 10 books
 
 Each of the 2,271 users with a held-out rating of 4 or more gets
-10 books they did not rate in training. A recommendation is a hit when it is one of
-those held-out books (v1's rule). Rating models rank books by predicted rating; the two
-table models score each book by its similarity to the user's training books. Equal scores
-go to title order. Higher is better, except that a higher average popularity (training
-ratings per recommended book) means more of the same few bestsellers.
+10 books. A recommendation is a hit when it is one of the user's held-out books rated
+4 or more (v1's rule); books the user rated in training are never recommended.
+Rating models rank books by predicted rating; the two table models score each book by its
+similarity to the user's training books. Equal scores go to title order. Higher is better,
+except that a higher average popularity (training ratings per recommended book) means more of
+the same few bestsellers.
 
 | Model | Precision@10 | Recall@10 | NDCG@10 | Hit rate | Coverage | Avg. popularity |
 |---|---|---|---|---|---|---|
@@ -83,11 +84,12 @@ with at least one book ranked below it.
 
 ## Notes on the data
 
-- 554 users rated two or more editions that share a title.
-  v1 adds those ratings together in one cell, so a cell can reach
+- 554 times, a user rated two or more editions that share a
+  title. v1 adds those ratings together in one cell, so a cell can reach
   40 on a 1-10 scale.
 - 203 held-out ratings are for a title the same user
   also rated in training. No model can recommend those, since training books are excluded.
-- Both are left as v1 had them here, so that v1's numbers reproduce. Phase 2 cleans them up.
+- Both are left as v1 had them here, so that v1's numbers reproduce. Stage 2
+  ([phase2-books.md](phase2-books.md)) cleans them up.
 
 Environment: python 3.14.2, numpy 2.3.4, pandas 2.3.3, scipy 1.16.3, scikit-learn 1.7.2.

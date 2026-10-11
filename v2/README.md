@@ -11,8 +11,8 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 16 tests, about 30 seconds, v1's re-run included
-python -m bookrec.evaluate      # writes reports/phase1-evaluation.md and .json
+pytest                          # 45 tests, about a minute, v1's re-run included
+python -m bookrec.evaluate      # writes the reports in reports/ and data/books.csv
 ```
 
 ## Stages
@@ -22,7 +22,7 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
 | Stage | What | Status |
 |---|---|---|
 | 1. Evaluation | Re-run v1, add baselines, score v1 again under the same rules | Done: [report](reports/phase1-evaluation.md) |
-| 2. Data quality | Clean titles, merge editions of the same book, fetch book details once | Next |
+| 2. Data quality | Identify books properly: merge editions, split different books that share a title ([report](reports/phase2-books.md), [books](data/books.csv)); then fetch book details once | Books done; details next |
 | 3. Models | Use the 0 ratings as signals of interest, add text embeddings, combine both | |
 | 4. Demo | Recommendations on saricmilos.com, with no server | |
 
@@ -47,16 +47,33 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
   training ratings per recommended book, against 18 for cosine). The cosine table is a
   little less accurate (21.4%) and much more varied (58.1% of the books).
 
-**The bar for v2:** beat a 27.7% hit rate and NDCG@10 of 0.082 without narrowing the
-recommendations to bestsellers.
+## What stage 2 found
+
+- **v1's 2,508 books are 2,405.** v1 identified a book by its exact title. 173 books had been
+  split across several titles, mostly editions ("Bel Canto" and "Bel Canto: A Novel"), and 75
+  titles mixed different authors' books ("Mortal Fear" by Greg Iles and by Robin Cook,
+  "Lightning" by Danielle Steel and by Dean Koontz). The rules lean towards changing nothing
+  and are listed in the [report](reports/phase2-books.md).
+- **The similarity tables gain most.** On the same users and the same held-out ratings, the
+  cosine table v1 measured goes from a 21.4% to a 28.0% hit rate, and its NDCG@10 from 0.070
+  to 0.092, the best of any model, while recommending from 70% of the books. The dot-product
+  table v1's API serves has the highest hit rate (30.7%) but still keeps to bestsellers: 19% of
+  the books, 109 training ratings per recommended book.
+- **Rating error improves too** (about 1.26 MAE for both corrected v1 models), but the bias
+  baseline is still better at 1.17.
+
+**The bar for v2's models:** NDCG@10 above 0.092 and a hit rate above 30.7%, with the
+cosine table's variety rather than the dot-product table's bestsellers.
 
 ## Code
 
 - `bookrec/data.py`: the shared split, produced by v1's own functions (v1 is imported, never changed).
+- `bookrec/books.py`: which ratings are about the same book.
 - `bookrec/metrics.py`: rating errors and top-10 metrics.
 - `bookrec/models.py`: baselines, v1 as shipped, v1 corrected, and the similarity tables.
 - `bookrec/evaluate.py`: runs everything and writes the report.
-- `tests/`: small worked examples for every metric and fix, and the v1 re-run that guards the rest.
+- `tests/`: small worked examples for every metric, fix and book rule; the v1 re-run that
+  guards the rest; and the reviewed counts of the book rules on the real data.
 
 The library versions are pinned to v1's. `tests/test_v1_reproduction.py` must still pass
 before they move.

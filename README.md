@@ -40,7 +40,10 @@ says how to run it and what each stage found.
    own code, and v1 is scored again next to simple baselines. v1's user-based model, as
    shipped, recommends best so far: 27.7% of users find one of their held-out books in its
    top 10, against 14.9% for the most popular books.
-2. Data quality: clean titles, merge editions of the same book, fetch book details once.
+2. Data quality, books done ([report](v2/reports/phase2-books.md)): v1 identified a book by its
+   exact title, so editions counted as different books and different books with one title as
+   one. Identified properly, v1's 2,508 books are 2,405, and the cosine similarity table v1
+   measured now recommends best (NDCG@10 0.070 → 0.092). Next: fetch book details once.
 3. Models: use the implicit interactions (62.3% of the ratings are 0, meaning a book was seen
    but not rated), add content embeddings for books with few ratings, and combine both.
 4. A demo on [saricmilos.com](https://www.saricmilos.com) that needs no server.
