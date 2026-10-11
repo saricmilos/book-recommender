@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/v1/**)",
+      "Edit(/datasets/**)"
+    ]
+  }
+}
