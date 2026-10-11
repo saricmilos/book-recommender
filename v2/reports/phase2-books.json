@@ -165,6 +165,1279 @@
     "repeat_ratings_averaged": 478,
     "held_out_dropped_as_already_read": 253
   },
+  "details": {
+    "books": 2405,
+    "by_isbn": 2405,
+    "by_title_and_author": 0,
+    "unmatched": 0,
+    "with_cover": 2402,
+    "with_description": 2092,
+    "with_subjects": 2378,
+    "work_title_differs": 121,
+    "work_title_examples": [
+      {
+        "title": "1984",
+        "author": "George Orwell",
+        "open_library": "Nineteen Eighty-Four"
+      },
+      {
+        "title": "4 Blondes",
+        "author": "Candace Bushnell",
+        "open_library": "Four Blondes"
+      },
+      {
+        "title": "The Alchemist: A Fable About Following Your Dream",
+        "author": "Paulo Coelho",
+        "open_library": "O Alquimista"
+      },
+      {
+        "title": "All Quiet on the Western Front",
+        "author": "Erich Maria Remarque",
+        "open_library": "Im Westen nichts Neues"
+      },
+      {
+        "title": "Animal Dreams",
+        "author": "Barbara Kingsolver",
+        "open_library": "Animal Dreams Cloth Signed"
+      },
+      {
+        "title": "Anne Frank: The Diary of a Young Girl",
+        "author": "ANNE FRANK",
+        "open_library": "Het Achterhuis"
+      },
+      {
+        "title": "The Arctic Incident (Artemis Fowl, Book 2)",
+        "author": "Eoin Colfer",
+        "open_library": "Artemis Fowl and the Arctic Incident"
+      },
+      {
+        "title": "Bastard Out of Carolina",
+        "author": "Dorothy Allison",
+        "open_library": "Bastarda"
+      },
+      {
+        "title": "Bittersweet",
+        "author": "DANIELLE STEEL",
+        "open_library": "Dulce Y Amargo"
+      },
+      {
+        "title": "Blade Runner: (Do Androids Dream of Electric Sheep)",
+        "author": "Philip K. Dick",
+        "open_library": "Do Androids Dream of Electric Sheep?"
+      },
+      {
+        "title": "The Cardinal of the Kremlin (Jack Ryan Novels)",
+        "author": "Tom Clancy",
+        "open_library": "Der Kardinal im Kreml"
+      },
+      {
+        "title": "Caribbean",
+        "author": "James A. Michener",
+        "open_library": "Caribbean-Limited Ed"
+      },
+      {
+        "title": "Catch Me If You Can: The True Story of a Real Fake",
+        "author": "Stan Redding",
+        "open_library": "Arr\u00eate-moi si tu peux"
+      },
+      {
+        "title": "The Celestine Prophecy (Celestine Prophecy)",
+        "author": "James Redfield",
+        "open_library": "The Celestine Prophecy - An Adventure"
+      },
+      {
+        "title": "Chesapeake",
+        "author": "James A. Michener",
+        "open_library": "Bah\u00eda de Chesapeake"
+      },
+      {
+        "title": "Chobits (Chobits)",
+        "author": "Clamp",
+        "open_library": "Chobits, Vol. 5"
+      },
+      {
+        "title": "Cordina'S Royal Family",
+        "author": "Nora Roberts",
+        "open_library": "Novels (Affaire Royale / Command Performance / Playboy Prince)"
+      },
+      {
+        "title": "Corelli's Mandolin : A Novel",
+        "author": "LOUIS DE BERNIERES",
+        "open_library": "Captain Corelli's Mandolin"
+      },
+      {
+        "title": "The Count of Monte Cristo",
+        "author": "Alexandre Dumas",
+        "open_library": "Le Comte de Monte-Cristo, II"
+      },
+      {
+        "title": "Cradle and All",
+        "author": "James Patterson",
+        "open_library": "Virgin"
+      },
+      {
+        "title": "Crossings",
+        "author": "DANIELLE STEEL",
+        "open_library": "Travers\u00e9es"
+      },
+      {
+        "title": "Crystal Line",
+        "author": "Anne McCaffrey",
+        "open_library": "La Trance du crystal, tome 3"
+      },
+      {
+        "title": "Darkfall",
+        "author": "Dean R. Koontz",
+        "open_library": "Darkness Comes"
+      },
+      {
+        "title": "Dating Game",
+        "author": "Danielle Steel",
+        "open_library": "Juego De Citas/ Dating Game"
+      },
+      {
+        "title": "Daughter of Fortune: A Novel",
+        "author": "Isabel Allende",
+        "open_library": "Hija de la fortuna"
+      },
+      {
+        "title": "Dilbert Fugitive From The Cubicle Police",
+        "author": "Scott Adams",
+        "open_library": "Dilbert"
+      },
+      {
+        "title": "The Diving Bell and the Butterfly : A Memoir of Life in Death",
+        "author": "JEAN-DOMINIQUE BAUBY",
+        "open_library": "Scaphandre et le papillon"
+      },
+      {
+        "title": "Empty Promises",
+        "author": "Ann Rule",
+        "open_library": "Empty promises and other true cases"
+      },
+      {
+        "title": "The Eternity Code (Artemis Fowl, Book 3)",
+        "author": "Eoin Colfer",
+        "open_library": "Artemis Fowl and the Eternity Code"
+      },
+      {
+        "title": "Falling Leaves: The True Story of an Unwanted Chinese Daughter",
+        "author": "Adeline Yen Mah",
+        "open_library": "Luo ye gui gen (Falling Leaves)"
+      },
+      {
+        "title": "Fish! A Remarkable Way to Boost Morale and Improve Results",
+        "author": "Stephen C. Lundin",
+        "open_library": "Fish!"
+      },
+      {
+        "title": "The Flanders Panel",
+        "author": "ARTURO PEREZ-REVERTE",
+        "open_library": "La tabla de Flandes"
+      },
+      {
+        "title": "Foucault's Pendulum",
+        "author": "Umberto Eco",
+        "open_library": "Il pendolo di Foucault"
+      },
+      {
+        "title": "Frankenstein (Changing Our World)",
+        "author": "Mary Wollstonecraft Shelley",
+        "open_library": "Frankenstein; or, The Modern Prometheus"
+      },
+      {
+        "title": "The Ghost",
+        "author": "Danielle Steel",
+        "open_library": "Die Erscheinung"
+      },
+      {
+        "title": "The Gift",
+        "author": "DANIELLE STEEL",
+        "open_library": "Le cadeau"
+      },
+      {
+        "title": "The Golden Compass (His Dark Materials, Book 1)",
+        "author": "PHILIP PULLMAN",
+        "open_library": "Northern Lights"
+      },
+      {
+        "title": "Gossip Girl #1 : A Novel by Cecily von Ziegesar (Gossip Girl)",
+        "author": "Cecily Von Ziegesar",
+        "open_library": "Gossip Girl"
+      },
+      {
+        "title": "Harry Potter and the Sorcerer's Stone (Book 1)",
+        "author": "J. K. Rowling",
+        "open_library": "Harry Potter and the Philosopher's Stone"
+      },
+      {
+        "title": "Harry Potter and the Sorcerer's Stone (Harry Potter (Paperback))",
+        "author": "J. K. Rowling",
+        "open_library": "Harry Potter and the Philosopher's Stone"
+      },
+      {
+        "title": "Hocus Pocus",
+        "author": "Kurt Vonnegut",
+        "open_library": "Hocus Pocus Or, What's the Hurry, Son?"
+      },
+      {
+        "title": "House Harkonnen (Dune: House Trilogy, Book 2)",
+        "author": "Brian Herbert",
+        "open_library": "Dune"
+      },
+      {
+        "title": "The House of the Spirits",
+        "author": "Isabel Allende",
+        "open_library": "La casa de los esp\u00edritus"
+      },
+      {
+        "title": "The House on Hope Street",
+        "author": "Danielle Steel",
+        "open_library": "Esperanza"
+      },
+      {
+        "title": "How Stella Got Her Groove Back",
+        "author": "Terry McMillan",
+        "open_library": "de Como Stella Recobro La Marcha"
+      },
+      {
+        "title": "In a Sunburned Country",
+        "author": "Bill Bryson",
+        "open_library": "Down Under (In a Sunburned Country)"
+      },
+      {
+        "title": "It's A Magical World: A Calvin and Hobbes Collection",
+        "author": "Bill Watterson",
+        "open_library": "Calvin und Hobbes, Bd.16, Die Welt der Wunder"
+      },
+      {
+        "title": "James Herriot's Cat Stories",
+        "author": "James Herriot",
+        "open_library": "Cat stories"
+      },
+      {
+        "title": "Jewels",
+        "author": "Danielle Steel",
+        "open_library": "Loving"
+      },
+      {
+        "title": "Jonathan Livingston Seagull",
+        "author": "Richard Bach",
+        "open_library": "Jonathan Livingston Le Goeland"
+      },
+      {
+        "title": "Journey",
+        "author": "James A. Michener",
+        "open_library": "Klondike. Roman"
+      },
+      {
+        "title": "Journey",
+        "author": "Danielle Steel",
+        "open_library": "EL VIAJE"
+      },
+      {
+        "title": "Kitchen",
+        "author": "Banana Yoshimoto",
+        "open_library": "\u30ad\u30c3\u30c1\u30f3"
+      },
+      {
+        "title": "The Klone and I: A High-Tech Love Story",
+        "author": "Danielle Steel",
+        "open_library": "Le klone et moi"
+      },
+      {
+        "title": "Lightning",
+        "author": "DANIELLE STEEL",
+        "open_library": "Relampago"
+      },
+      {
+        "title": "Like Water for Chocolate: A Novel in Monthly Installments With Recipes, Romances and Home Remedies",
+        "author": "Laura Esquivel",
+        "open_library": "Como agua para chocolate"
+      },
+      {
+        "title": "The Little Prince",
+        "author": "Antoine de Saint-Exup\u00e9ry",
+        "open_library": "Le petit prince"
+      },
+      {
+        "title": "A Long Fatal Love Chase",
+        "author": "Louisa May Alcott",
+        "open_library": "The chase"
+      },
+      {
+        "title": "Love in the Time of Cholera (Penguin Great Books of the 20th Century)",
+        "author": "Gabriel Garcia Marquez",
+        "open_library": "El amor en los tiempos del c\u00f3lera"
+      },
+      {
+        "title": "Love in the Time of Cholera",
+        "author": "GABRIEL GARCIA MARQUEZ",
+        "open_library": "El amor en los tiempos del c\u00f3lera"
+      },
+      {
+        "title": "The Macgregors: Daniel-Ian",
+        "author": "Nora Roberts",
+        "open_library": "Daniel and Ian"
+      },
+      {
+        "title": "The Macgregors: Serena - Caine (The Macgregors)",
+        "author": "Nora Roberts",
+        "open_library": "Serena & Caine"
+      },
+      {
+        "title": "Master of the Game",
+        "author": "Sidney Sheldon",
+        "open_library": "El Amo Del Juego/Masters of the Game"
+      },
+      {
+        "title": "Mixed Blessings",
+        "author": "DANIELLE STEEL",
+        "open_library": "Naissances"
+      },
+      {
+        "title": "More Than Complete Hitchhiker's Guide",
+        "author": "Douglas Adams",
+        "open_library": "Works (The Hitch Hiker's Guide to the Galaxy / The Restaurant at the End of the Universe / Life, the Universe and Everything / So Long, and Thanks for All the Fish / Young Zaphod Plays it Safe)"
+      },
+      {
+        "title": "The Mummy or Ramses the Damned",
+        "author": "Anne Rice",
+        "open_library": "The Mummy"
+      },
+      {
+        "title": "The Name of the Rose: including Postscript to the Name of the Rose",
+        "author": "Umberto Eco",
+        "open_library": "Il nome della rosa"
+      },
+      {
+        "title": "Name of the Rose-Nla",
+        "author": "Umberto Eco",
+        "open_library": "Il nome della rosa"
+      },
+      {
+        "title": "The Namesake",
+        "author": "Jhumpa Lahiri",
+        "open_library": "El Buen Nombre (Lingua Franca)"
+      },
+      {
+        "title": "Net Force",
+        "author": "Tom Clancy",
+        "open_library": "Tom Clancy's Net Force"
+      },
+      {
+        "title": "A Night to Remember",
+        "author": "WALTER LORD",
+        "open_library": "La Nuit du Titanic"
+      },
+      {
+        "title": "Night",
+        "author": "Elie Wiesel",
+        "open_library": "La Nuit"
+      },
+      {
+        "title": "No Greater Love",
+        "author": "Danielle Steel",
+        "open_library": "Nichts ist st\u00e4rker als die Liebe"
+      },
+      {
+        "title": "The Odyssey",
+        "author": "Robert Fagles",
+        "open_library": "\u1f48\u03b4\u03cd\u03c3\u03c3\u03b5\u03b9\u03b1"
+      },
+      {
+        "title": "The Odyssey",
+        "author": "Robert Fitzgerald",
+        "open_library": "\u1f48\u03b4\u03cd\u03c3\u03c3\u03b5\u03b9\u03b1"
+      },
+      {
+        "title": "The Odyssey",
+        "author": "Homer",
+        "open_library": "\u1f48\u03b4\u03cd\u03c3\u03c3\u03b5\u03b9\u03b1"
+      },
+      {
+        "title": "Once in a Lifetime",
+        "author": "Danielle Steel",
+        "open_library": "Il \u00e9tait une fois l'amour"
+      },
+      {
+        "title": "Ordinary People",
+        "author": "Judith Guest",
+        "open_library": "Siradan insanlar"
+      },
+      {
+        "title": "Palomino",
+        "author": "DANIELLE STEEL",
+        "open_library": "Loving"
+      },
+      {
+        "title": "A Perfect Stranger",
+        "author": "Danielle Steel",
+        "open_library": "Una Perfecta Desconocida/Perfect Stranger"
+      },
+      {
+        "title": "Perfume: The Story of a Murderer (Vintage International)",
+        "author": "Patrick Suskind",
+        "open_library": "Das Parfum"
+      },
+      {
+        "title": "Persepolis : The Story of a Childhood (Alex Awards (Awards))",
+        "author": "MARJANE SATRAPI",
+        "open_library": "Persepolis 1 & 2"
+      },
+      {
+        "title": "Poland",
+        "author": "James A. Michener",
+        "open_library": "Mazurka. Roman"
+      },
+      {
+        "title": "Portrait in Sepia : A Novel",
+        "author": "Isabel Allende",
+        "open_library": "Retrato en sepia"
+      },
+      {
+        "title": "Prehistory of the Far Side",
+        "author": "Gary Larson",
+        "open_library": "The Far Side Gallery 5"
+      },
+      {
+        "title": "Prodigal Summer: A Novel",
+        "author": "Barbara Kingsolver",
+        "open_library": "Prodigal Summer Display"
+      },
+      {
+        "title": "The Professor and the Madman: A Tale of Murder, Insanity, and the Making of The Oxford English Dictionary",
+        "author": "Simon Winchester",
+        "open_library": "The Professor and the Madman CD"
+      },
+      {
+        "title": "The Reader",
+        "author": "Bernhard Schlink",
+        "open_library": "Der Vorleser"
+      },
+      {
+        "title": "Scientific Progress Goes 'Boink': A Calvin and Hobbes Collection",
+        "author": "Bill Watterson",
+        "open_library": "Calvin et Hobbes, tome 9"
+      },
+      {
+        "title": "See How They Run",
+        "author": "James Patterson",
+        "open_library": "The Jericho commandment"
+      },
+      {
+        "title": "September",
+        "author": "Rosamunde Pilcher",
+        "open_library": "Septiembre"
+      },
+      {
+        "title": "The Servants of Twilight",
+        "author": "Dean R. Koontz",
+        "open_library": "Twilight"
+      },
+      {
+        "title": "The Seville Communion",
+        "author": "Arturo Perez-Reverte",
+        "open_library": "La piel del tambor"
+      },
+      {
+        "title": "The Sexual Life of Catherine M.",
+        "author": "Catherine Millet",
+        "open_library": "La vie sexuelle de Catherine M."
+      },
+      {
+        "title": "Silk",
+        "author": "Alessandro Baricco",
+        "open_library": "Seta"
+      },
+      {
+        "title": "Slaughterhouse Five or the Children's Crusade: A Duty Dance With Death",
+        "author": "Kurt Vonnegut",
+        "open_library": "Slaughterhouse-Five"
+      },
+      {
+        "title": "Slightly Single (Red Dress Ink (Paperback))",
+        "author": "Wendy Markham",
+        "open_library": "Slightly Single (Red Dress Ink paperback}"
+      },
+      {
+        "title": "Smilla's Sense of Snow",
+        "author": "Peter Hoeg",
+        "open_library": "Fr\u00f8ken Smillas fornemmelse for sne"
+      },
+      {
+        "title": "Something Under the Bed Is Drooling",
+        "author": "Bill Watterson",
+        "open_library": "Calvin et Hobbes, tome 12"
+      },
+      {
+        "title": "Sophie's World: A Novel About the History of Philosophy",
+        "author": "Jostein Gaarder",
+        "open_library": "Sofies verden"
+      },
+      {
+        "title": "Space",
+        "author": "James A. Michener",
+        "open_library": "La course aux \u00e9toiles"
+      },
+      {
+        "title": "Star",
+        "author": "Danielle Steel",
+        "open_library": "El Sue\u00f1o de Una Estrella"
+      },
+      {
+        "title": "Stealing Shadows (Shadows Trilogy (Paperback))",
+        "author": "Kay Hooper",
+        "open_library": "Stealing Shadows (Shadows Trilogy"
+      },
+      {
+        "title": "Stephen King's Danse Macabre",
+        "author": "Stephen King",
+        "open_library": "Danse Macabre"
+      },
+      {
+        "title": "Stolen Lives: Twenty Years in a Desert Jail",
+        "author": "Malika Oufkir",
+        "open_library": "La prisonniere"
+      },
+      {
+        "title": "Story of O",
+        "author": "Pauline Reage",
+        "open_library": "Histoire d'O"
+      },
+      {
+        "title": "The Stranger",
+        "author": "ALBERT CAMUS",
+        "open_library": "L\u2019\u00e9tranger"
+      },
+      {
+        "title": "Summer's End",
+        "author": "Danielle Steel",
+        "open_library": "Fine dell'estate"
+      },
+      {
+        "title": "Tai-Pan",
+        "author": "JAMES CLAVELL",
+        "open_library": "Tai-Pan (Asian Saga"
+      },
+      {
+        "title": "The Thief Lord",
+        "author": "Cornelia Funke",
+        "open_library": "Herr der Diebe"
+      },
+      {
+        "title": "To Love Again",
+        "author": "Danielle Steel",
+        "open_library": "Un monde de r\u00eave"
+      },
+      {
+        "title": "Tom Clancy's Op-Center: Mirror Image (Tom Clancy's Op Center (Paperback))",
+        "author": "Tom Clancy",
+        "open_library": "Tom Clancy's Op-Centre"
+      },
+      {
+        "title": "Traveling Mercies: Some Thoughts on Faith",
+        "author": "Anne Lamott",
+        "open_library": "Traveling Mercies Signed Editi"
+      },
+      {
+        "title": "The Two Dead Girls (Green Mile Series)",
+        "author": "Stephen King",
+        "open_library": "The Green Mile"
+      },
+      {
+        "title": "The Unbearable Lightness of Being",
+        "author": "Milan Kundera",
+        "open_library": "Nesnesiteln\u00e1 lehkost byt\u00ed"
+      },
+      {
+        "title": "Vanished",
+        "author": "Danielle Steel",
+        "open_library": "Secuestrado"
+      },
+      {
+        "title": "The Velveteen Rabbit",
+        "author": "Margery Williams",
+        "open_library": "The Classic Tale of the Velveteen Rabbit"
+      },
+      {
+        "title": "Wanderlust",
+        "author": "Danielle Steel",
+        "open_library": "Destinos Errantes"
+      },
+      {
+        "title": "The Waste Lands (The Dark Tower, Book 3)",
+        "author": "Stephen King",
+        "open_library": "A Torre Negra"
+      },
+      {
+        "title": "Wings",
+        "author": "Danielle Steel",
+        "open_library": "Plein Ciel"
+      },
+      {
+        "title": "Xanth 14: Question Quest",
+        "author": "Piers Anthony",
+        "open_library": "Question Quest"
+      }
+    ],
+    "with_other_works": 431,
+    "other_works_with_another_title": 38,
+    "other_title_examples": [
+      {
+        "title": "Anne of Ingleside (Anne of Green Gables Novels (Paperback))",
+        "author": "L.M. MONTGOMERY",
+        "others": [
+          "The Anne of Green Gables novels [8 novels]"
+        ]
+      },
+      {
+        "title": "Anne of the Island",
+        "author": "Lucy Maud Montgomery",
+        "others": [
+          "The Anne of Green Gables novels [8 novels]"
+        ]
+      },
+      {
+        "title": "Anne of Windy Poplars (Anne of Green Gables Novels (Paperback))",
+        "author": "L.M. MONTGOMERY",
+        "others": [
+          "The Anne of Green Gables novels [8 novels]"
+        ]
+      },
+      {
+        "title": "Anne's House of Dreams",
+        "author": "L.M. MONTGOMERY",
+        "others": [
+          "The Anne of Green Gables novels [8 novels]"
+        ]
+      },
+      {
+        "title": "The Awakening",
+        "author": "Kate Chopin",
+        "others": [
+          "Works (Awakening / Beyond the Bayou / Desiree's Baby / Kiss / Locket / Ma'ame Pelagie / Pair of Silk Stockings / Reflection / Respectable Woman)"
+        ]
+      },
+      {
+        "title": "Balzac and the Little Chinese Seamstress : A Novel",
+        "author": "DAI SIJIE",
+        "others": [
+          "Balzac et la petite tailleuse chinoise"
+        ]
+      },
+      {
+        "title": "Blindness (Harvest Book)",
+        "author": "Jose Saramago",
+        "others": [
+          "Ensaio Sobre a Cegueira"
+        ]
+      },
+      {
+        "title": "Call of the Wild",
+        "author": "Jack London",
+        "others": [
+          "Wuthering Heights"
+        ]
+      },
+      {
+        "title": "Cat and Mouse",
+        "author": "James Patterson",
+        "others": [
+          "Katz und Maus"
+        ]
+      },
+      {
+        "title": "Chobits (Chobits)",
+        "author": "Clamp",
+        "others": [
+          "Chobits, Volume 6"
+        ]
+      },
+      {
+        "title": "Crocodile on the Sandbank",
+        "author": "Elizabeth Peters",
+        "others": [
+          "The Second Mouse"
+        ]
+      },
+      {
+        "title": "Dracula",
+        "author": "Bram Stoker",
+        "others": [
+          "Dracula / Sign of Four"
+        ]
+      },
+      {
+        "title": "The Fellowship of the Ring (The Lord of the Rings, Part 1)",
+        "author": "J.R.R. TOLKIEN",
+        "others": [
+          "The Lord of the Rings",
+          "The Lord of the Rings, Part 1"
+        ]
+      },
+      {
+        "title": "A Heart of Stone",
+        "author": "Renate Dorrestein",
+        "others": [
+          "Hart van steen"
+        ]
+      },
+      {
+        "title": "Hemlock Bay",
+        "author": "Catherine Coulter",
+        "others": [
+          "Hemlock Bay Abridged Audio"
+        ]
+      },
+      {
+        "title": "House Atreides (Dune: House Trilogy, Book 1)",
+        "author": "Brian Herbert",
+        "others": [
+          "Dune House Corrino"
+        ]
+      },
+      {
+        "title": "House Corrino (Dune: House Trilogy, Book 3)",
+        "author": "Brian Herbert",
+        "others": [
+          "Dune House Corrino"
+        ]
+      },
+      {
+        "title": "House Harkonnen (Dune: House Trilogy, Book 2)",
+        "author": "Brian Herbert",
+        "others": [
+          "Dune House Corrino"
+        ]
+      },
+      {
+        "title": "I Am Legend",
+        "author": "Richard Matheson",
+        "others": [
+          "Works (Buried Talents / Dance of the Dead / Dress of White Silk / From Shadowed Places / I Am Legend / Mad House / Person to Person / Prey / The Funeral / The Near Departed / Witch War)"
+        ]
+      },
+      {
+        "title": "Les Miserables",
+        "author": "VICTOR HUGO",
+        "others": [
+          "Victor Hugo's Les miserables"
+        ]
+      },
+      {
+        "title": "Lies and the Lying Liars Who Tell Them: A Fair and Balanced Look at the Right",
+        "author": "Al Franken",
+        "others": [
+          "Lies (and the lying liars who tell them)"
+        ]
+      },
+      {
+        "title": "Little House on the Prairie",
+        "author": "Laura Ingalls Wilder",
+        "others": [
+          "Farmer Boy"
+        ]
+      },
+      {
+        "title": "Little Women",
+        "author": "Louisa May Alcott",
+        "others": [
+          "Little Women [adaptation]"
+        ]
+      },
+      {
+        "title": "Misery",
+        "author": "Stephen King",
+        "others": [
+          "It"
+        ]
+      },
+      {
+        "title": "The Neverending Story",
+        "author": "Michael Ende",
+        "others": [
+          "Die unendliche Geschichte"
+        ]
+      },
+      {
+        "title": "On the Banks of Plum Creek",
+        "author": "Laura Ingalls Wilder",
+        "others": [
+          "By the Shores of Silver Lake"
+        ]
+      },
+      {
+        "title": "One Hundred Years of Solitude",
+        "author": "Gabriel Garcia Marquez",
+        "others": [
+          "Cien a\u00f1os de soledad"
+        ]
+      },
+      {
+        "title": "Open House",
+        "author": "Elizabeth Berg",
+        "others": [
+          "Open House A Novel"
+        ]
+      },
+      {
+        "title": "The Return of the King (The Lord of the Rings, Part 3)",
+        "author": "J.R.R. TOLKIEN",
+        "others": [
+          "The Lord of the Rings"
+        ]
+      },
+      {
+        "title": "Reunion",
+        "author": "Sharon Sala",
+        "others": [
+          "The Mediator"
+        ]
+      },
+      {
+        "title": "Sanctuary",
+        "author": "Nora Roberts",
+        "others": [
+          "1-800-Where-R-You"
+        ]
+      },
+      {
+        "title": "The Scarlet Letter",
+        "author": "Nathaniel Hawthorne",
+        "others": [
+          "SCARLET LETTER (HC) C2000"
+        ]
+      },
+      {
+        "title": "See Jane Run",
+        "author": "Joy Fielding",
+        "others": [
+          "Huye, Jane, huye!"
+        ]
+      },
+      {
+        "title": "The Testament",
+        "author": "John Grisham",
+        "others": [
+          "Testament d'un po\u00e8te juif assassin\u00e9"
+        ]
+      },
+      {
+        "title": "Texas",
+        "author": "James A. Michener",
+        "others": [
+          "Wagons West"
+        ]
+      },
+      {
+        "title": "The Two Towers (The Lord of the Rings, Part 2)",
+        "author": "J.R.R. TOLKIEN",
+        "others": [
+          "The Lord of the Rings"
+        ]
+      },
+      {
+        "title": "Veronika Decides to Die",
+        "author": "Paulo Coelho",
+        "others": [
+          "Veronika decide morrer"
+        ]
+      },
+      {
+        "title": "Wuthering Heights",
+        "author": "Emily Bronte",
+        "others": [
+          "A Study Guide to Emily Bronte's Wuthering Heights"
+        ]
+      }
+    ],
+    "open_library_author_differs": 54,
+    "author_examples": [
+      {
+        "title": "Abduction",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Acceptable Risk",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "After Dark",
+        "author": "Jayne Castle",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "The Awakening",
+        "author": "Shannon Drake",
+        "open_library": [
+          "Heather Graham"
+        ]
+      },
+      {
+        "title": "The Bachelor (Warner Books Contemporary Romance)",
+        "author": "Carly Phillips",
+        "open_library": [
+          "Sandra Brown"
+        ]
+      },
+      {
+        "title": "Blindsight",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Ceremony in Death (Eve Dallas Mysteries (Paperback))",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "The Claiming of Sleeping Beauty (Sleeping Beauty)",
+        "author": "A.N. Roquelaure",
+        "open_library": [
+          "Anne Rice"
+        ]
+      },
+      {
+        "title": "Conspiracy in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Dangerous",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "Deception",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "The Diary of Ellen Rimbauer: My Life at Rose Red",
+        "author": "Joyce Reardon",
+        "open_library": [
+          "Ridley Pearson"
+        ]
+      },
+      {
+        "title": "The Diary of Ellen Rimbauer: My Life at Rose Red",
+        "author": "Ellen Rimbauer",
+        "open_library": [
+          "Ridley Pearson"
+        ]
+      },
+      {
+        "title": "Downtown",
+        "author": "Ed McBain",
+        "open_library": [
+          "Evan Hunter"
+        ]
+      },
+      {
+        "title": "Fatal Cure",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Firebrand (Mira Historical Romance)",
+        "author": "Susan Wiggs",
+        "open_library": [
+          "Susan Childress"
+        ]
+      },
+      {
+        "title": "GARDEN OF SHADOWS (Dollanger Saga (Paperback))",
+        "author": "Ariel Jennifer Jones",
+        "open_library": [
+          "V.C. Andrews"
+        ]
+      },
+      {
+        "title": "Glory in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Go Ask Alice",
+        "author": "Anonymous",
+        "open_library": [
+          "Beatrice Sparks"
+        ]
+      },
+      {
+        "title": "Harmful Intent",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Harry Potter and the Chamber of Secrets Postcard Book",
+        "author": "J. K. Rowling",
+        "open_library": [
+          "Dena Neusner"
+        ]
+      },
+      {
+        "title": "Holiday in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "House Atreides (Dune: House Trilogy, Book 1)",
+        "author": "Brian Herbert",
+        "open_library": [
+          "Kevin J. Anderson"
+        ]
+      },
+      {
+        "title": "I Thee Wed",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "Imitation in Death (Eve Dallas Mysteries (Paperback))",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Immortal in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Invasion",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Judgment in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Kitchen",
+        "author": "Banana Yoshimoto",
+        "open_library": [
+          "\u5409\u672c \u3070\u306a\u306a"
+        ]
+      },
+      {
+        "title": "Loyalty in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Midnight Runner",
+        "author": "Jack Higgins",
+        "open_library": [
+          "Henry Patterson"
+        ]
+      },
+      {
+        "title": "Mischief",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "Mortal Fear",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "My Sergei: A Love Story",
+        "author": "Ekaterina Gordeeva",
+        "open_library": [
+          "\u0415\u043a\u0430\u0442\u0435\u0440\u0438\u043d\u0430 \u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440\u043e\u0432\u043d\u0430 \u0413\u043e\u0440\u0434\u0435\u0435\u0432\u0430"
+        ]
+      },
+      {
+        "title": "Naked in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "The Odyssey",
+        "author": "Robert Fagles",
+        "open_library": [
+          "\u1f4d\u03bc\u03b7\u03c1\u03bf\u03c2"
+        ]
+      },
+      {
+        "title": "The Odyssey",
+        "author": "Robert Fitzgerald",
+        "open_library": [
+          "\u1f4d\u03bc\u03b7\u03c1\u03bf\u03c2"
+        ]
+      },
+      {
+        "title": "The Odyssey",
+        "author": "Homer",
+        "open_library": [
+          "\u1f4d\u03bc\u03b7\u03c1\u03bf\u03c2"
+        ]
+      },
+      {
+        "title": "Out of This World",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts",
+          "Laurell K. Hamilton",
+          "Susan Krinard",
+          "Maggie Shayne"
+        ]
+      },
+      {
+        "title": "The Playboy",
+        "author": "Carly Phillips",
+        "open_library": [
+          "Sandra Brown"
+        ]
+      },
+      {
+        "title": "Purity in Death",
+        "author": "J.D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Rapture in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Reckless",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "Reunion in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Scandal",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "The Secret of the Old Clock (Nancy Drew Mystery Stories, No 1)",
+        "author": "Carolyn Keene",
+        "open_library": [
+          "Leslie McFarlane"
+        ]
+      },
+      {
+        "title": "Seduction in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Slightly Shady",
+        "author": "Amanda Quick",
+        "open_library": [
+          "Jayne Ann Krentz"
+        ]
+      },
+      {
+        "title": "Story of O",
+        "author": "Pauline Reage",
+        "open_library": [
+          "Dominique Aury",
+          "Guido Crepax"
+        ]
+      },
+      {
+        "title": "Tom Clancy's Op-Center Balance of Power (Tom Clancy's Op Center (Paperback))",
+        "author": "Tom Clancy",
+        "open_library": [
+          "Jeff Rovin"
+        ]
+      },
+      {
+        "title": "Toxin",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Vector",
+        "author": "Robin Cook",
+        "open_library": [
+          "Lisa Jackson"
+        ]
+      },
+      {
+        "title": "Vengeance in Death",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      },
+      {
+        "title": "Witness in Death (Eve Dallas Mysteries (Paperback))",
+        "author": "J. D. Robb",
+        "open_library": [
+          "Nora Roberts"
+        ]
+      }
+    ]
+  },
   "environment": {
     "python": "3.14.2",
     "numpy": "2.3.4",

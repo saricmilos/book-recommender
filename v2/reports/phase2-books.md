@@ -113,4 +113,273 @@ The dot-product and cosine tables are rebuilt with v1's method on the cleaned bo
 | v1 item-based CF, as shipped | 5.113 | 6.263 |
 | v1 item-based CF, corrected | 1.260 | 1.684 |
 
+## Book details from Open Library
+
+`python -m bookrec.openlibrary` fetched every book's Open Library work once: its title,
+authors, first year, cover, subjects and description, saved in
+[`data/book_details.jsonl`](../data/book_details.jsonl). Later stages read that file, never the
+network. A book takes the work most of its ratings' editions belong to, unless another of its
+works has the book's title: an edition filed under an omnibus ("The Anne of Green Gables
+novels [8 novels]") or under a wrong work then gives way. A book none of whose ISBNs Open
+Library knows is searched by title and author, and kept only if both match.
+
+|  | Books |
+|---|---|
+| Found by an edition's ISBN | 2,405 (100.0%) |
+| Found by a title and author search | 0 (0.0%) |
+| Not found | 0 (0.0%) |
+| With a cover | 2,402 (99.9%) |
+| With a description | 2,092 (87.0%) |
+| With subjects | 2,378 (98.9%) |
+
+Three checks, each with its full list:
+
+- For 121 books the work's title doesn't match ours. Mostly that is the
+  original-language title ("Le petit prince") or an earlier title of the same book, and the
+  work is right; a few are wrong works with no better one among the book's editions ("House
+  Harkonnen" under "Dune"), so a description shown for these books should be checked first.
+
+<details><summary>The 121 books</summary>
+
+| Book | Author | Open Library's title for its work |
+|---|---|---|
+| 1984 | George Orwell | Nineteen Eighty-Four |
+| 4 Blondes | Candace Bushnell | Four Blondes |
+| The Alchemist: A Fable About Following Your Dream | Paulo Coelho | O Alquimista |
+| All Quiet on the Western Front | Erich Maria Remarque | Im Westen nichts Neues |
+| Animal Dreams | Barbara Kingsolver | Animal Dreams Cloth Signed |
+| Anne Frank: The Diary of a Young Girl | ANNE FRANK | Het Achterhuis |
+| The Arctic Incident (Artemis Fowl, Book 2) | Eoin Colfer | Artemis Fowl and the Arctic Incident |
+| Bastard Out of Carolina | Dorothy Allison | Bastarda |
+| Bittersweet | DANIELLE STEEL | Dulce Y Amargo |
+| Blade Runner: (Do Androids Dream of Electric Sheep) | Philip K. Dick | Do Androids Dream of Electric Sheep? |
+| The Cardinal of the Kremlin (Jack Ryan Novels) | Tom Clancy | Der Kardinal im Kreml |
+| Caribbean | James A. Michener | Caribbean-Limited Ed |
+| Catch Me If You Can: The True Story of a Real Fake | Stan Redding | Arrête-moi si tu peux |
+| The Celestine Prophecy (Celestine Prophecy) | James Redfield | The Celestine Prophecy - An Adventure |
+| Chesapeake | James A. Michener | Bahía de Chesapeake |
+| Chobits (Chobits) | Clamp | Chobits, Vol. 5 |
+| Cordina'S Royal Family | Nora Roberts | Novels (Affaire Royale / Command Performance / Playboy Prince) |
+| Corelli's Mandolin : A Novel | LOUIS DE BERNIERES | Captain Corelli's Mandolin |
+| The Count of Monte Cristo | Alexandre Dumas | Le Comte de Monte-Cristo, II |
+| Cradle and All | James Patterson | Virgin |
+| Crossings | DANIELLE STEEL | Traversées |
+| Crystal Line | Anne McCaffrey | La Trance du crystal, tome 3 |
+| Darkfall | Dean R. Koontz | Darkness Comes |
+| Dating Game | Danielle Steel | Juego De Citas/ Dating Game |
+| Daughter of Fortune: A Novel | Isabel Allende | Hija de la fortuna |
+| Dilbert Fugitive From The Cubicle Police | Scott Adams | Dilbert |
+| The Diving Bell and the Butterfly : A Memoir of Life in Death | JEAN-DOMINIQUE BAUBY | Scaphandre et le papillon |
+| Empty Promises | Ann Rule | Empty promises and other true cases |
+| The Eternity Code (Artemis Fowl, Book 3) | Eoin Colfer | Artemis Fowl and the Eternity Code |
+| Falling Leaves: The True Story of an Unwanted Chinese Daughter | Adeline Yen Mah | Luo ye gui gen (Falling Leaves) |
+| Fish! A Remarkable Way to Boost Morale and Improve Results | Stephen C. Lundin | Fish! |
+| The Flanders Panel | ARTURO PEREZ-REVERTE | La tabla de Flandes |
+| Foucault's Pendulum | Umberto Eco | Il pendolo di Foucault |
+| Frankenstein (Changing Our World) | Mary Wollstonecraft Shelley | Frankenstein; or, The Modern Prometheus |
+| The Ghost | Danielle Steel | Die Erscheinung |
+| The Gift | DANIELLE STEEL | Le cadeau |
+| The Golden Compass (His Dark Materials, Book 1) | PHILIP PULLMAN | Northern Lights |
+| Gossip Girl #1 : A Novel by Cecily von Ziegesar (Gossip Girl) | Cecily Von Ziegesar | Gossip Girl |
+| Harry Potter and the Sorcerer's Stone (Book 1) | J. K. Rowling | Harry Potter and the Philosopher's Stone |
+| Harry Potter and the Sorcerer's Stone (Harry Potter (Paperback)) | J. K. Rowling | Harry Potter and the Philosopher's Stone |
+| Hocus Pocus | Kurt Vonnegut | Hocus Pocus Or, What's the Hurry, Son? |
+| House Harkonnen (Dune: House Trilogy, Book 2) | Brian Herbert | Dune |
+| The House of the Spirits | Isabel Allende | La casa de los espíritus |
+| The House on Hope Street | Danielle Steel | Esperanza |
+| How Stella Got Her Groove Back | Terry McMillan | de Como Stella Recobro La Marcha |
+| In a Sunburned Country | Bill Bryson | Down Under (In a Sunburned Country) |
+| It's A Magical World: A Calvin and Hobbes Collection | Bill Watterson | Calvin und Hobbes, Bd.16, Die Welt der Wunder |
+| James Herriot's Cat Stories | James Herriot | Cat stories |
+| Jewels | Danielle Steel | Loving |
+| Jonathan Livingston Seagull | Richard Bach | Jonathan Livingston Le Goeland |
+| Journey | James A. Michener | Klondike. Roman |
+| Journey | Danielle Steel | EL VIAJE |
+| Kitchen | Banana Yoshimoto | キッチン |
+| The Klone and I: A High-Tech Love Story | Danielle Steel | Le klone et moi |
+| Lightning | DANIELLE STEEL | Relampago |
+| Like Water for Chocolate: A Novel in Monthly Installments With Recipes, Romances and Home Remedies | Laura Esquivel | Como agua para chocolate |
+| The Little Prince | Antoine de Saint-Exupéry | Le petit prince |
+| A Long Fatal Love Chase | Louisa May Alcott | The chase |
+| Love in the Time of Cholera (Penguin Great Books of the 20th Century) | Gabriel Garcia Marquez | El amor en los tiempos del cólera |
+| Love in the Time of Cholera | GABRIEL GARCIA MARQUEZ | El amor en los tiempos del cólera |
+| The Macgregors: Daniel-Ian | Nora Roberts | Daniel and Ian |
+| The Macgregors: Serena - Caine (The Macgregors) | Nora Roberts | Serena & Caine |
+| Master of the Game | Sidney Sheldon | El Amo Del Juego/Masters of the Game |
+| Mixed Blessings | DANIELLE STEEL | Naissances |
+| More Than Complete Hitchhiker's Guide | Douglas Adams | Works (The Hitch Hiker's Guide to the Galaxy / The Restaurant at the End of the Universe / Life, the Universe and Everything / So Long, and Thanks for All the Fish / Young Zaphod Plays it Safe) |
+| The Mummy or Ramses the Damned | Anne Rice | The Mummy |
+| The Name of the Rose: including Postscript to the Name of the Rose | Umberto Eco | Il nome della rosa |
+| Name of the Rose-Nla | Umberto Eco | Il nome della rosa |
+| The Namesake | Jhumpa Lahiri | El Buen Nombre (Lingua Franca) |
+| Net Force | Tom Clancy | Tom Clancy's Net Force |
+| A Night to Remember | WALTER LORD | La Nuit du Titanic |
+| Night | Elie Wiesel | La Nuit |
+| No Greater Love | Danielle Steel | Nichts ist stärker als die Liebe |
+| The Odyssey | Robert Fagles | Ὀδύσσεια |
+| The Odyssey | Robert Fitzgerald | Ὀδύσσεια |
+| The Odyssey | Homer | Ὀδύσσεια |
+| Once in a Lifetime | Danielle Steel | Il était une fois l'amour |
+| Ordinary People | Judith Guest | Siradan insanlar |
+| Palomino | DANIELLE STEEL | Loving |
+| A Perfect Stranger | Danielle Steel | Una Perfecta Desconocida/Perfect Stranger |
+| Perfume: The Story of a Murderer (Vintage International) | Patrick Suskind | Das Parfum |
+| Persepolis : The Story of a Childhood (Alex Awards (Awards)) | MARJANE SATRAPI | Persepolis 1 & 2 |
+| Poland | James A. Michener | Mazurka. Roman |
+| Portrait in Sepia : A Novel | Isabel Allende | Retrato en sepia |
+| Prehistory of the Far Side | Gary Larson | The Far Side Gallery 5 |
+| Prodigal Summer: A Novel | Barbara Kingsolver | Prodigal Summer Display |
+| The Professor and the Madman: A Tale of Murder, Insanity, and the Making of The Oxford English Dictionary | Simon Winchester | The Professor and the Madman CD |
+| The Reader | Bernhard Schlink | Der Vorleser |
+| Scientific Progress Goes 'Boink': A Calvin and Hobbes Collection | Bill Watterson | Calvin et Hobbes, tome 9 |
+| See How They Run | James Patterson | The Jericho commandment |
+| September | Rosamunde Pilcher | Septiembre |
+| The Servants of Twilight | Dean R. Koontz | Twilight |
+| The Seville Communion | Arturo Perez-Reverte | La piel del tambor |
+| The Sexual Life of Catherine M. | Catherine Millet | La vie sexuelle de Catherine M. |
+| Silk | Alessandro Baricco | Seta |
+| Slaughterhouse Five or the Children's Crusade: A Duty Dance With Death | Kurt Vonnegut | Slaughterhouse-Five |
+| Slightly Single (Red Dress Ink (Paperback)) | Wendy Markham | Slightly Single (Red Dress Ink paperback} |
+| Smilla's Sense of Snow | Peter Hoeg | Frøken Smillas fornemmelse for sne |
+| Something Under the Bed Is Drooling | Bill Watterson | Calvin et Hobbes, tome 12 |
+| Sophie's World: A Novel About the History of Philosophy | Jostein Gaarder | Sofies verden |
+| Space | James A. Michener | La course aux étoiles |
+| Star | Danielle Steel | El Sueño de Una Estrella |
+| Stealing Shadows (Shadows Trilogy (Paperback)) | Kay Hooper | Stealing Shadows (Shadows Trilogy |
+| Stephen King's Danse Macabre | Stephen King | Danse Macabre |
+| Stolen Lives: Twenty Years in a Desert Jail | Malika Oufkir | La prisonniere |
+| Story of O | Pauline Reage | Histoire d'O |
+| The Stranger | ALBERT CAMUS | L’étranger |
+| Summer's End | Danielle Steel | Fine dell'estate |
+| Tai-Pan | JAMES CLAVELL | Tai-Pan (Asian Saga |
+| The Thief Lord | Cornelia Funke | Herr der Diebe |
+| To Love Again | Danielle Steel | Un monde de rêve |
+| Tom Clancy's Op-Center: Mirror Image (Tom Clancy's Op Center (Paperback)) | Tom Clancy | Tom Clancy's Op-Centre |
+| Traveling Mercies: Some Thoughts on Faith | Anne Lamott | Traveling Mercies Signed Editi |
+| The Two Dead Girls (Green Mile Series) | Stephen King | The Green Mile |
+| The Unbearable Lightness of Being | Milan Kundera | Nesnesitelná lehkost bytí |
+| Vanished | Danielle Steel | Secuestrado |
+| The Velveteen Rabbit | Margery Williams | The Classic Tale of the Velveteen Rabbit |
+| Wanderlust | Danielle Steel | Destinos Errantes |
+| The Waste Lands (The Dark Tower, Book 3) | Stephen King | A Torre Negra |
+| Wings | Danielle Steel | Plein Ciel |
+| Xanth 14: Question Quest | Piers Anthony | Question Quest |
+
+</details>
+
+- 431 books have editions in more than one Open Library work. For
+  38 of them another work has a different title: mostly an omnibus or a
+  translation Open Library files apart, sometimes a sign that one title covers several books
+  ("Chobits", several volumes under one title in Book-Crossing).
+
+<details><summary>The 38 books</summary>
+
+| Book | Author | Other Open Library titles of its editions |
+|---|---|---|
+| Anne of Ingleside (Anne of Green Gables Novels (Paperback)) | L.M. MONTGOMERY | The Anne of Green Gables novels [8 novels] |
+| Anne of the Island | Lucy Maud Montgomery | The Anne of Green Gables novels [8 novels] |
+| Anne of Windy Poplars (Anne of Green Gables Novels (Paperback)) | L.M. MONTGOMERY | The Anne of Green Gables novels [8 novels] |
+| Anne's House of Dreams | L.M. MONTGOMERY | The Anne of Green Gables novels [8 novels] |
+| The Awakening | Kate Chopin | Works (Awakening / Beyond the Bayou / Desiree's Baby / Kiss / Locket / Ma'ame Pelagie / Pair of Silk Stockings / Reflection / Respectable Woman) |
+| Balzac and the Little Chinese Seamstress : A Novel | DAI SIJIE | Balzac et la petite tailleuse chinoise |
+| Blindness (Harvest Book) | Jose Saramago | Ensaio Sobre a Cegueira |
+| Call of the Wild | Jack London | Wuthering Heights |
+| Cat and Mouse | James Patterson | Katz und Maus |
+| Chobits (Chobits) | Clamp | Chobits, Volume 6 |
+| Crocodile on the Sandbank | Elizabeth Peters | The Second Mouse |
+| Dracula | Bram Stoker | Dracula / Sign of Four |
+| The Fellowship of the Ring (The Lord of the Rings, Part 1) | J.R.R. TOLKIEN | The Lord of the Rings; The Lord of the Rings, Part 1 |
+| A Heart of Stone | Renate Dorrestein | Hart van steen |
+| Hemlock Bay | Catherine Coulter | Hemlock Bay Abridged Audio |
+| House Atreides (Dune: House Trilogy, Book 1) | Brian Herbert | Dune House Corrino |
+| House Corrino (Dune: House Trilogy, Book 3) | Brian Herbert | Dune House Corrino |
+| House Harkonnen (Dune: House Trilogy, Book 2) | Brian Herbert | Dune House Corrino |
+| I Am Legend | Richard Matheson | Works (Buried Talents / Dance of the Dead / Dress of White Silk / From Shadowed Places / I Am Legend / Mad House / Person to Person / Prey / The Funeral / The Near Departed / Witch War) |
+| Les Miserables | VICTOR HUGO | Victor Hugo's Les miserables |
+| Lies and the Lying Liars Who Tell Them: A Fair and Balanced Look at the Right | Al Franken | Lies (and the lying liars who tell them) |
+| Little House on the Prairie | Laura Ingalls Wilder | Farmer Boy |
+| Little Women | Louisa May Alcott | Little Women [adaptation] |
+| Misery | Stephen King | It |
+| The Neverending Story | Michael Ende | Die unendliche Geschichte |
+| On the Banks of Plum Creek | Laura Ingalls Wilder | By the Shores of Silver Lake |
+| One Hundred Years of Solitude | Gabriel Garcia Marquez | Cien años de soledad |
+| Open House | Elizabeth Berg | Open House A Novel |
+| The Return of the King (The Lord of the Rings, Part 3) | J.R.R. TOLKIEN | The Lord of the Rings |
+| Reunion | Sharon Sala | The Mediator |
+| Sanctuary | Nora Roberts | 1-800-Where-R-You |
+| The Scarlet Letter | Nathaniel Hawthorne | SCARLET LETTER (HC) C2000 |
+| See Jane Run | Joy Fielding | Huye, Jane, huye! |
+| The Testament | John Grisham | Testament d'un poète juif assassiné |
+| Texas | James A. Michener | Wagons West |
+| The Two Towers (The Lord of the Rings, Part 2) | J.R.R. TOLKIEN | The Lord of the Rings |
+| Veronika Decides to Die | Paulo Coelho | Veronika decide morrer |
+| Wuthering Heights | Emily Bronte | A Study Guide to Emily Bronte's Wuthering Heights |
+
+</details>
+
+- For 54 books, Open Library credits an author who doesn't match the one on
+  the rated edition: usually a pen name (J. D. Robb is Nora Roberts) or Open Library's mistake
+  (it credits Robin Cook's novels to Lisa Jackson). v2 keeps the edition's author.
+
+<details><summary>The 54 books</summary>
+
+| Book | Author (from the rated edition) | Open Library's author |
+|---|---|---|
+| Abduction | Robin Cook | Lisa Jackson |
+| Acceptable Risk | Robin Cook | Lisa Jackson |
+| After Dark | Jayne Castle | Jayne Ann Krentz |
+| The Awakening | Shannon Drake | Heather Graham |
+| The Bachelor (Warner Books Contemporary Romance) | Carly Phillips | Sandra Brown |
+| Blindsight | Robin Cook | Lisa Jackson |
+| Ceremony in Death (Eve Dallas Mysteries (Paperback)) | J. D. Robb | Nora Roberts |
+| The Claiming of Sleeping Beauty (Sleeping Beauty) | A.N. Roquelaure | Anne Rice |
+| Conspiracy in Death | J. D. Robb | Nora Roberts |
+| Dangerous | Amanda Quick | Jayne Ann Krentz |
+| Deception | Amanda Quick | Jayne Ann Krentz |
+| The Diary of Ellen Rimbauer: My Life at Rose Red | Joyce Reardon | Ridley Pearson |
+| The Diary of Ellen Rimbauer: My Life at Rose Red | Ellen Rimbauer | Ridley Pearson |
+| Downtown | Ed McBain | Evan Hunter |
+| Fatal Cure | Robin Cook | Lisa Jackson |
+| Firebrand (Mira Historical Romance) | Susan Wiggs | Susan Childress |
+| GARDEN OF SHADOWS (Dollanger Saga (Paperback)) | Ariel Jennifer Jones | V.C. Andrews |
+| Glory in Death | J. D. Robb | Nora Roberts |
+| Go Ask Alice | Anonymous | Beatrice Sparks |
+| Harmful Intent | Robin Cook | Lisa Jackson |
+| Harry Potter and the Chamber of Secrets Postcard Book | J. K. Rowling | Dena Neusner |
+| Holiday in Death | J. D. Robb | Nora Roberts |
+| House Atreides (Dune: House Trilogy, Book 1) | Brian Herbert | Kevin J. Anderson |
+| I Thee Wed | Amanda Quick | Jayne Ann Krentz |
+| Imitation in Death (Eve Dallas Mysteries (Paperback)) | J. D. Robb | Nora Roberts |
+| Immortal in Death | J. D. Robb | Nora Roberts |
+| Invasion | Robin Cook | Lisa Jackson |
+| Judgment in Death | J. D. Robb | Nora Roberts |
+| Kitchen | Banana Yoshimoto | 吉本 ばなな |
+| Loyalty in Death | J. D. Robb | Nora Roberts |
+| Midnight Runner | Jack Higgins | Henry Patterson |
+| Mischief | Amanda Quick | Jayne Ann Krentz |
+| Mortal Fear | Robin Cook | Lisa Jackson |
+| My Sergei: A Love Story | Ekaterina Gordeeva | Екатерина Александровна Гордеева |
+| Naked in Death | J. D. Robb | Nora Roberts |
+| The Odyssey | Robert Fagles | Ὅμηρος |
+| The Odyssey | Robert Fitzgerald | Ὅμηρος |
+| The Odyssey | Homer | Ὅμηρος |
+| Out of This World | J. D. Robb | Nora Roberts, Laurell K. Hamilton, Susan Krinard, Maggie Shayne |
+| The Playboy | Carly Phillips | Sandra Brown |
+| Purity in Death | J.D. Robb | Nora Roberts |
+| Rapture in Death | J. D. Robb | Nora Roberts |
+| Reckless | Amanda Quick | Jayne Ann Krentz |
+| Reunion in Death | J. D. Robb | Nora Roberts |
+| Scandal | Amanda Quick | Jayne Ann Krentz |
+| The Secret of the Old Clock (Nancy Drew Mystery Stories, No 1) | Carolyn Keene | Leslie McFarlane |
+| Seduction in Death | J. D. Robb | Nora Roberts |
+| Slightly Shady | Amanda Quick | Jayne Ann Krentz |
+| Story of O | Pauline Reage | Dominique Aury, Guido Crepax |
+| Tom Clancy's Op-Center Balance of Power (Tom Clancy's Op Center (Paperback)) | Tom Clancy | Jeff Rovin |
+| Toxin | Robin Cook | Lisa Jackson |
+| Vector | Robin Cook | Lisa Jackson |
+| Vengeance in Death | J. D. Robb | Nora Roberts |
+| Witness in Death (Eve Dallas Mysteries (Paperback)) | J. D. Robb | Nora Roberts |
+
+</details>
+
 Environment: python 3.14.2, numpy 2.3.4, pandas 2.3.3, scipy 1.16.3, scikit-learn 1.7.2.

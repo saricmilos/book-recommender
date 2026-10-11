@@ -11,9 +11,13 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 45 tests, about a minute, v1's re-run included
+pytest                          # 75 tests, under a minute, v1's re-run included
 python -m bookrec.evaluate      # writes the reports in reports/ and data/books.csv
 ```
+
+Book details were fetched once from [Open Library](https://openlibrary.org) with
+`python -m bookrec.openlibrary` (about 45 minutes at 1 request a second) and are committed in
+`data/book_details.jsonl`, so nothing above needs the network.
 
 ## Stages
 
@@ -22,7 +26,7 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
 | Stage | What | Status |
 |---|---|---|
 | 1. Evaluation | Re-run v1, add baselines, score v1 again under the same rules | Done: [report](reports/phase1-evaluation.md) |
-| 2. Data quality | Identify books properly: merge editions, split different books that share a title ([report](reports/phase2-books.md), [books](data/books.csv)); then fetch book details once | Books done; details next |
+| 2. Data quality | Identify books properly: merge editions, split different books that share a title; fetch book details once | Done: [report](reports/phase2-books.md), [books](data/books.csv), [details](data/book_details.jsonl) |
 | 3. Models | Use the 0 ratings as signals of interest, add text embeddings, combine both | |
 | 4. Demo | Recommendations on saricmilos.com, with no server | |
 
@@ -61,6 +65,12 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
   the books, 109 training ratings per recommended book.
 - **Rating error improves too** (about 1.26 MAE for both corrected v1 models), but the bias
   baseline is still better at 1.17.
+- **Every book is on Open Library**, found through one of its editions' ISBNs: 99.9% have a
+  cover, 87% a description and 99% subjects, for stage 3's text model and stage 4's demo.
+  Open Library has errors of its own (it credits Robin Cook's novels to Lisa Jackson and files
+  some editions under the wrong work), so v2 keeps the authors from the rated editions,
+  prefers a work whose title and author match the book's, and lists the 121 books whose work
+  still has another title: mostly the original-language title, a handful of wrong works.
 
 **The bar for v2's models:** NDCG@10 above 0.092 and a hit rate above 30.7%, with the
 cosine table's variety rather than the dot-product table's bestsellers.
@@ -69,6 +79,7 @@ cosine table's variety rather than the dot-product table's bestsellers.
 
 - `bookrec/data.py`: the shared split, produced by v1's own functions (v1 is imported, never changed).
 - `bookrec/books.py`: which ratings are about the same book.
+- `bookrec/openlibrary.py`: book details from Open Library, fetched once and cached.
 - `bookrec/metrics.py`: rating errors and top-10 metrics.
 - `bookrec/models.py`: baselines, v1 as shipped, v1 corrected, and the similarity tables.
 - `bookrec/evaluate.py`: runs everything and writes the report.
