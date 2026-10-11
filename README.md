@@ -10,7 +10,7 @@ v1 on the same test split.
 | | v1 | v2 |
 |---|---|---|
 | Built | by hand, November 2025 to early 2026 | with Claude Code, from October 2026: I set the goals, review every change and check the evaluation |
-| Code | [`v1/`](v1/), and tag [`v1.0`](https://github.com/saricmilos/book-recommender/tree/v1.0) for the original layout | `v2/` |
+| Code | [`v1/`](v1/), and tag [`v1.0`](https://github.com/saricmilos/book-recommender/tree/v1.0) for the original layout | [`v2/`](v2/) |
 | Status | frozen | in progress |
 
 ## v1
@@ -33,9 +33,13 @@ were written on; to run them, point `dataset_folder` at `datasets/`.
 
 ## v2
 
-Planned in stages, each measured on the same fixed test split:
+Built in stages, each measured on the same test split as v1. [`v2/README.md`](v2/README.md)
+says how to run it and what each stage found.
 
-1. Evaluation: a fixed split, a most-popular baseline, and v1 scored again under the same rules.
+1. Evaluation, done ([report](v2/reports/phase1-evaluation.md)): v1 reproduces exactly from its
+   own code, and v1 is scored again next to simple baselines. v1's user-based model, as
+   shipped, recommends best so far: 27.7% of users find one of their held-out books in its
+   top 10, against 14.9% for the most popular books.
 2. Data quality: clean titles, merge editions of the same book, fetch book details once.
 3. Models: use the implicit interactions (62.3% of the ratings are 0, meaning a book was seen
    but not rated), add content embeddings for books with few ratings, and combine both.

@@ -16,10 +16,20 @@ written down and fixed in v2, never in v1. `.claude/settings.json` denies the fi
 
 - The live API (`what-else-should-i-read.fly.dev`, Fly app `what-else-should-i-read`) serves the
   book demo on cassiopeiai.com. It needs `item_encoder.pkl`, which is not in `v1/models/`
-  (`*.pkl` is gitignored); the only copy is inside the deployed image. Do not redeploy v1 from
-  this checkout.
+  (`*.pkl` is gitignored). The encoder is only the 2,508 training titles in sorted order, so it
+  can be rebuilt exactly: `bookrec.data.load_split().titles`.
+- The API's table (`v1/models/topk_item_sim.npz`) holds raw dot products; v1's notebook
+  evaluated cosine. Phase 1 rebuilds the table from v1's code and checks it is identical.
 - The notebooks load the data from the absolute path of the machine they were written on, so
   they don't run as they are. v2 reads `datasets/` by a relative path.
+
+## v2
+
+Run from `v2/` with its venv: `pip install -e ".[test]"`, `pytest`, `python -m bookrec.evaluate`.
+Every v2 model is scored on the shared split from `bookrec.data.load_split()` (v1's split,
+made by v1's code); `tests/test_v1_reproduction.py` pins its fingerprint and v1's numbers, and
+must pass before the pinned library versions move. Reports in `v2/reports/` are generated;
+change the code, not the report. Each stage is a branch, merged after review.
 
 ## Commits
 

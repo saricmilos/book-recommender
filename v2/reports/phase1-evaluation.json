@@ -1,0 +1,251 @@
+{
+  "split": {
+    "fingerprint": "3ed51494707252f9",
+    "users": 2272,
+    "books": 2508,
+    "train": 45592,
+    "test": 11375
+  },
+  "reproduction": [
+    {
+      "what": "Ratings after v1's cleaning",
+      "published": 383839,
+      "rerun": 383839,
+      "match": true
+    },
+    {
+      "what": "Ratings after the 10-and-10 filter",
+      "published": 56967,
+      "rerun": 56967,
+      "match": true
+    },
+    {
+      "what": "Users",
+      "published": 2272,
+      "rerun": 2272,
+      "match": true
+    },
+    {
+      "what": "Books",
+      "published": 2508,
+      "rerun": 2508,
+      "match": true
+    },
+    {
+      "what": "Training ratings",
+      "published": 45592,
+      "rerun": 45592,
+      "match": true
+    },
+    {
+      "what": "Held-out ratings",
+      "published": 11375,
+      "rerun": 11375,
+      "match": true
+    },
+    {
+      "what": "User-based CF: MAE",
+      "published": 7.3627,
+      "rerun": 7.362705493976705,
+      "match": true
+    },
+    {
+      "what": "User-based CF: RMSE",
+      "published": 7.6219,
+      "rerun": 7.62188470653866,
+      "match": true
+    },
+    {
+      "what": "User-based CF: Precision@10",
+      "published": 0.0383,
+      "rerun": 0.03830911492734478,
+      "match": true
+    },
+    {
+      "what": "User-based CF: Recall@10",
+      "published": 0.0848,
+      "rerun": 0.0847538214670254,
+      "match": true
+    },
+    {
+      "what": "Item-based CF: MAE",
+      "published": 5.2947,
+      "rerun": 5.294713183765105,
+      "match": true
+    },
+    {
+      "what": "Item-based CF: RMSE",
+      "published": 6.4017,
+      "rerun": 6.401702354926934,
+      "match": true
+    },
+    {
+      "what": "API table rebuilt from v1's code equals v1/models/topk_item_sim.npz",
+      "published": null,
+      "rerun": null,
+      "match": true
+    }
+  ],
+  "rating": [
+    {
+      "model": "Global mean",
+      "mae": 1.3861336035433245,
+      "rmse": 1.7794220370937848
+    },
+    {
+      "model": "User mean",
+      "mae": 1.1798607081288854,
+      "rmse": 1.571573136574811
+    },
+    {
+      "model": "Book mean",
+      "mae": 1.3717318134765233,
+      "rmse": 1.7480803967039693
+    },
+    {
+      "model": "Bias baseline",
+      "mae": 1.171003840940085,
+      "rmse": 1.5301748859849296
+    },
+    {
+      "model": "v1 user-based CF, as shipped",
+      "mae": 7.362705493976705,
+      "rmse": 7.62188470653866
+    },
+    {
+      "model": "v1 user-based CF, corrected",
+      "mae": 1.3145563165060463,
+      "rmse": 1.8509027370574709
+    },
+    {
+      "model": "v1 item-based CF, as shipped",
+      "mae": 5.294713183765105,
+      "rmse": 6.401702354926934
+    },
+    {
+      "model": "v1 item-based CF, corrected",
+      "mae": 1.3140523683450336,
+      "rmse": 1.7926670917262288
+    }
+  ],
+  "ranking": {
+    "k": 10,
+    "relevant_from": 4,
+    "users": 2271,
+    "rows": [
+      {
+        "model": "Random",
+        "precision": 0.0021576398062527523,
+        "recall": 0.004582434452189399,
+        "ndcg": 0.003475167172605323,
+        "hit_rate": 0.021136063408190225,
+        "coverage": 1.0,
+        "mean_popularity": 18.030955526199914,
+        "users": 2271
+      },
+      {
+        "model": "Most popular",
+        "precision": 0.016380449141347425,
+        "recall": 0.038346137045510285,
+        "ndcg": 0.02978785712335079,
+        "hit_rate": 0.14883311316600617,
+        "coverage": 0.009170653907496013,
+        "mean_popularity": 130.65799207397623,
+        "users": 2271
+      },
+      {
+        "model": "Book mean",
+        "precision": 0.0014090708938793485,
+        "recall": 0.0027531716165554443,
+        "ndcg": 0.0017243207525927922,
+        "hit_rate": 0.014090708938793483,
+        "coverage": 0.004784688995215311,
+        "mean_popularity": 9.005151915455746,
+        "users": 2271
+      },
+      {
+        "model": "Bias baseline",
+        "precision": 0.010127697049757816,
+        "recall": 0.02158402240120009,
+        "ndcg": 0.017043858404482744,
+        "hit_rate": 0.08190224570673713,
+        "coverage": 0.01594896331738437,
+        "mean_popularity": 84.61686481726113,
+        "users": 2271
+      },
+      {
+        "model": "v1 user-based CF, as shipped",
+        "precision": 0.03835314839277851,
+        "recall": 0.08516175603942497,
+        "ndcg": 0.08157274250934049,
+        "hit_rate": 0.2769704975781594,
+        "coverage": 0.8608452950558214,
+        "mean_popularity": 46.87644209599295,
+        "users": 2271
+      },
+      {
+        "model": "v1 user-based CF, corrected",
+        "precision": 0.007749889916336417,
+        "recall": 0.01701448829765439,
+        "ndcg": 0.011665213928376078,
+        "hit_rate": 0.0722148833113166,
+        "coverage": 0.7396331738437002,
+        "mean_popularity": 35.501188903566714,
+        "users": 2271
+      },
+      {
+        "model": "v1 item-based CF, as shipped",
+        "precision": 0.017921620431527962,
+        "recall": 0.045009548426101026,
+        "ndcg": 0.0340595960314858,
+        "hit_rate": 0.15808014090708938,
+        "coverage": 0.9206539074960127,
+        "mean_popularity": 35.41818582122413,
+        "users": 2271
+      },
+      {
+        "model": "v1 item-based CF, corrected",
+        "precision": 0.00479964773227653,
+        "recall": 0.009634978943004876,
+        "ndcg": 0.0060658121552538205,
+        "hit_rate": 0.04447380008806693,
+        "coverage": 0.5314992025518341,
+        "mean_popularity": 15.340863055922501,
+        "users": 2271
+      },
+      {
+        "model": "v1 API table: dot product, top 50",
+        "precision": 0.03421400264200793,
+        "recall": 0.08311692503416004,
+        "ndcg": 0.07168829487679884,
+        "hit_rate": 0.2633201232937032,
+        "coverage": 0.15829346092503987,
+        "mean_popularity": 99.27239101717305,
+        "users": 2271
+      },
+      {
+        "model": "Cosine table, top 50 (what v1 measured)",
+        "precision": 0.03205636283575517,
+        "recall": 0.0787353124259197,
+        "ndcg": 0.07017387519391409,
+        "hit_rate": 0.2144429766622633,
+        "coverage": 0.5813397129186603,
+        "mean_popularity": 17.69317481285777,
+        "users": 2271
+      }
+    ],
+    "v1_user_cf_users_tied_at_k": 1197
+  },
+  "data_notes": {
+    "duplicate_user_title_pairs": 554,
+    "largest_training_cell": 40.0,
+    "held_out_titles_also_in_training": 203
+  },
+  "environment": {
+    "python": "3.14.2",
+    "numpy": "2.3.4",
+    "pandas": "2.3.3",
+    "scipy": "1.16.3",
+    "scikit-learn": "1.7.2"
+  }
+}
