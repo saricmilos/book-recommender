@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bookrec"
+version = "2.0.0.dev0"
+description = "Book recommender v2: evaluation and models, built with Claude Code"
+readme = "README.md"
+requires-python = ">=3.11"
+# v1's versions, pinned: phase 1 checks that v1's code still gives v1's published numbers,
+# and tests/test_v1_reproduction.py is what allows these to move.
+dependencies = [
+    "numpy==2.3.4",
+    "pandas==2.3.3",
+    "scipy==1.16.3",
+    "scikit-learn==1.7.2",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["bookrec*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

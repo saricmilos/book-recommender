@@ -45,3 +45,7 @@ Thumbs.db
 *.out
 # Packaging metadata from pip install -e
 *.egg-info/
+
+# v2 environment and test cache
+.venv/
+.pytest_cache/
