@@ -3,6 +3,7 @@ report and data/books.csv must be regenerated and reviewed."""
 
 import pytest
 
+from bookrec import openlibrary
 from bookrec.books import clean_split
 from bookrec.data import load_split
 
@@ -31,6 +32,15 @@ def test_every_book_has_training_ratings_and_no_user_holds_out_a_book_they_train
     assert set(split.test["item_idx"]) <= set(split.train["item_idx"])
     overlap = split.test.merge(split.train, on=["user_idx", "item_idx"])
     assert overlap.empty
+
+
+def test_book_details_belong_to_these_books(cleaned):
+    """data/book_details.jsonl was fetched for these books; if the rules change the books,
+    re-run `python -m bookrec.openlibrary` (it answers from its cache where it can)."""
+    _, books, _ = cleaned
+    records = openlibrary.read_details()
+    assert records is not None, "data/book_details.jsonl is missing"
+    assert [(r["book_id"], r["title"]) for r in records] == list(enumerate(books["title"]))
 
 
 def test_known_splits_and_merges(cleaned):

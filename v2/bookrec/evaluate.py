@@ -19,7 +19,7 @@ import scipy
 import sklearn
 from scipy.sparse import csr_matrix
 
-from bookrec import models
+from bookrec import models, openlibrary
 from bookrec.books import MIN_TRAINING_RATINGS_TO_SPLIT, clean_split
 from bookrec.data import Split, load_split
 from bookrec.metrics import ranking_metrics, rating_errors, relevant_items, tied_at_k
@@ -159,7 +159,9 @@ def run_stage2() -> tuple[dict, pd.DataFrame]:
     cleaned, books, changes = clean_split(load_split())
     results = score_models(cleaned, models.rebuild_v1_api_similarity(cleaned))
     results.pop("v1_user_cf_precision_recall")
-    return {**results, "changes": changes, "environment": _environment()}, books
+    records = openlibrary.read_details()
+    details = openlibrary.summarise(records) if records else None
+    return {**results, "changes": changes, "details": details, "environment": _environment()}, books
 
 
 def _matches(published: float, rerun: float) -> bool:
@@ -413,8 +415,84 @@ The dot-product and cosine tables are rebuilt with v1's method on the cleaned bo
 
 {_rating_table(r['rating'])}
 
+{_render_details(r['details'])}
+
 Environment: {_versions(r['environment'])}.
 """
+
+
+def _render_details(d: dict | None) -> str:
+    if d is None:
+        return "## Book details from Open Library\n\nNot fetched yet: run `python -m bookrec.openlibrary`."
+    share = lambda n: f"{n:,} ({n / d['books']:.1%})"  # noqa: E731
+    facts = _table(
+        ["", "Books"],
+        [
+            ["Found by an edition's ISBN", share(d["by_isbn"])],
+            ["Found by a title and author search", share(d["by_title_and_author"])],
+            ["Not found", share(d["unmatched"])],
+            ["With a cover", share(d["with_cover"])],
+            ["With a description", share(d["with_description"])],
+            ["With subjects", share(d["with_subjects"])],
+        ],
+    )
+    work_titles = _table(
+        ["Book", "Author", "Open Library's title for its work"],
+        [[x["title"], x["author"], x["open_library"]] for x in d["work_title_examples"]],
+    )
+    titles = _table(
+        ["Book", "Author", "Other Open Library titles of its editions"],
+        [[x["title"], x["author"], "; ".join(x["others"])] for x in d["other_title_examples"]],
+    )
+    authors = _table(
+        ["Book", "Author (from the rated edition)", "Open Library's author"],
+        [[x["title"], x["author"], ", ".join(x["open_library"])] for x in d["author_examples"]],
+    )
+    return f"""## Book details from Open Library
+
+`python -m bookrec.openlibrary` fetched every book's Open Library work once: its title,
+authors, first year, cover, subjects and description, saved in
+[`data/book_details.jsonl`](../data/book_details.jsonl). Later stages read that file, never the
+network. A book takes the work most of its ratings' editions belong to, unless another of its
+works has the book's title: an edition filed under an omnibus ("The Anne of Green Gables
+novels [8 novels]") or under a wrong work then gives way. A book none of whose ISBNs Open
+Library knows is searched by title and author, and kept only if both match.
+
+{facts}
+
+Three checks, each with its full list:
+
+- For {d['work_title_differs']:,} books the work's title doesn't match ours. Mostly that is the
+  original-language title ("Le petit prince") or an earlier title of the same book, and the
+  work is right; a few are wrong works with no better one among the book's editions ("House
+  Harkonnen" under "Dune"), so a description shown for these books should be checked first.
+
+<details><summary>The {d['work_title_differs']:,} books</summary>
+
+{work_titles}
+
+</details>
+
+- {d['with_other_works']:,} books have editions in more than one Open Library work. For
+  {d['other_works_with_another_title']:,} of them another work has a different title: mostly an omnibus or a
+  translation Open Library files apart, sometimes a sign that one title covers several books
+  ("Chobits", several volumes under one title in Book-Crossing).
+
+<details><summary>The {d['other_works_with_another_title']:,} books</summary>
+
+{titles}
+
+</details>
+
+- For {d['open_library_author_differs']:,} books, Open Library credits an author who doesn't match the one on
+  the rated edition: usually a pen name (J. D. Robb is Nora Roberts) or Open Library's mistake
+  (it credits Robin Cook's novels to Lisa Jackson). v2 keeps the edition's author.
+
+<details><summary>The {d['open_library_author_differs']:,} books</summary>
+
+{authors}
+
+</details>"""
 
 
 def write_reports(stage1: dict, stage2: dict, books: pd.DataFrame) -> None:

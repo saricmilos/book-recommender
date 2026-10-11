@@ -145,6 +145,16 @@ def assign_books(rows: pd.DataFrame) -> pd.Series:
     return keys
 
 
+def book_rows(split: Split) -> pd.DataFrame:
+    """Every rating of v1's split, train and held-out ("part"), with its ISBN and book_key."""
+    cols = ["user_id", "isbn", "book_title", "book_author", "book_rating"]
+    rows = pd.concat(
+        [split.train[cols].assign(part="train"), split.test[cols].assign(part="test")], ignore_index=True
+    )
+    rows["book_key"] = assign_books(rows)
+    return rows
+
+
 def _most_common(values: pd.Series) -> str:
     return values.value_counts().index[0]
 
@@ -156,11 +166,7 @@ def clean_split(split: Split) -> tuple[Split, pd.DataFrame, dict]:
 
     Returns the new split, a table of books (what each one merged), and counts of what changed.
     """
-    cols = ["user_id", "isbn", "book_title", "book_author", "book_rating"]
-    rows = pd.concat(
-        [split.train[cols].assign(part="train"), split.test[cols].assign(part="test")], ignore_index=True
-    )
-    rows["book_key"] = assign_books(rows)
+    rows = book_rows(split)
     frames = {part: rows[rows["part"] == part] for part in ("train", "test")}
 
     books = (

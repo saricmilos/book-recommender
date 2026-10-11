@@ -49,3 +49,6 @@ Thumbs.db
 # v2 environment and test cache
 .venv/
 .pytest_cache/
+
+# Open Library responses, cached while fetching; data/book_details.jsonl is the committed result
+v2/data/openlibrary-cache/
