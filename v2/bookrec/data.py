@@ -41,8 +41,9 @@ def v1_module(name: str) -> ModuleType:
 
 @dataclass(frozen=True)
 class Split:
-    """v1's split. Rows carry user_id, book_title, book_rating, user_idx and item_idx; the indices
-    are v1's label encoders, so item_idx i is the i-th title in sorted order, as in v1's API.
+    """A train/held-out split. Rows carry user_id, book_title, book_rating, user_idx and
+    item_idx (v1's split also isbn and book_author). In v1's split the indices are v1's label
+    encoders, so item_idx i is the i-th title in sorted order, as in v1's API.
     Shared by every caller: treat the frames as read-only."""
 
     filtered: pd.DataFrame  # v1's filtered ratings, index kept: v1's split shuffles these labels
@@ -101,6 +102,9 @@ def load_split() -> Split:
     filtered = item_cf.filter_users_items(
         cleaned, min_user_ratings=MIN_USER_RATINGS, min_item_ratings=MIN_BOOK_RATINGS
     )
+    # v1 keeps only user, title and rating; the ISBN and author ride along by the row labels
+    # the filter kept. v1's split groups and shuffles row labels, so it is unchanged by them.
+    filtered = filtered.join(cleaned[["isbn", "book_author"]])
     train, test = item_cf.train_test_split_by_user(filtered, test_frac=TEST_FRAC, random_seed=SEED)
     encoders = item_cf.CFEncoders()
     train = encoders.fit(train)

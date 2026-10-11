@@ -17,7 +17,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.sparse import csr_matrix, load_npz
 
-from bookrec.data import MIN_BOOK_RATINGS, MIN_USER_RATINGS, SEED, TEST_FRAC, Split, v1_module
+from bookrec.data import MIN_BOOK_RATINGS, MIN_USER_RATINGS, SEED, Split, v1_module
 from bookrec.paths import V1_API_MODEL
 
 V1_NEIGHBOURS = 10  # k in both v1 models
@@ -86,7 +86,9 @@ class V1UserCF:
 
 
 def v1_user_cf(split: Split) -> V1UserCF:
-    """v1's UserBasedCF class, run by v1's code from the split onwards."""
+    """v1's UserBasedCF class, run by v1's code on the given split. Its own train_test_split
+    is skipped: on v1's data it is the same code as the split in data.py, and skipping it lets
+    the class run on other splits too."""
     user_cf = v1_module("user_cf")
     model = user_cf.UserBasedCF(
         min_user_ratings=MIN_USER_RATINGS,
@@ -94,9 +96,10 @@ def v1_user_cf(split: Split) -> V1UserCF:
         k_neighbors=V1_NEIGHBOURS,
         random_seed=SEED,
     )
-    model.train_test_split(split.filtered.copy(), test_frac=TEST_FRAC)
-    _check_same_split(split, model.test_df["user_idx"], model.test_df["book_idx"])
-    model.build_train_matrix()
+    model.train_df = split.train.rename(columns={"item_idx": "book_idx"})
+    model.test_df = split.test.rename(columns={"item_idx": "book_idx"})
+    if model.build_train_matrix().shape != (split.n_users, split.n_items):
+        raise RuntimeError("every user and book must have a training rating")
     model.compute_user_similarity()
     model.predict_ratings()
     return V1UserCF(model.pred_matrix, model)
@@ -121,14 +124,6 @@ def v1_item_cf(split: Split) -> V1ItemCF:
     with np.errstate(divide="ignore", invalid="ignore"):  # v1 divides before masking 0/0
         predictions = item_cf.predict_ratings(matrix, similarity, neighbours)
     return V1ItemCF(predictions, matrix, similarity, neighbours)
-
-
-def _check_same_split(split: Split, user_idx, item_idx) -> None:
-    if not (
-        np.array_equal(np.asarray(user_idx), split.test["user_idx"].to_numpy())
-        and np.array_equal(np.asarray(item_idx), split.test["item_idx"].to_numpy())
-    ):
-        raise RuntimeError("v1's UserBasedCF split differs from the shared split")
 
 
 # --- v1 corrected -----------------------------------------------------------------------

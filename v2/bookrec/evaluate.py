@@ -1,5 +1,9 @@
-"""Phase 1: check that v1's code still gives v1's published numbers, then measure baselines and
-v1's models on the same split. Writes reports/phase1-evaluation.md and .json.
+"""Measure every model and write the reports.
+
+Stage 1: check that v1's code still gives v1's published numbers, then score baselines and
+v1's models on v1's split (reports/phase1-evaluation.md).
+Stage 2: the same models on the same ratings, with books identified properly
+(reports/phase2-books.md, and data/books.csv listing what every book merged).
 
     python -m bookrec.evaluate
 """
@@ -8,17 +12,18 @@ from __future__ import annotations
 
 import json
 import platform
-from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
 import scipy
 import sklearn
+from scipy.sparse import csr_matrix
 
 from bookrec import models
+from bookrec.books import MIN_TRAINING_RATINGS_TO_SPLIT, clean_split
 from bookrec.data import Split, load_split
 from bookrec.metrics import ranking_metrics, rating_errors, relevant_items, tied_at_k
-from bookrec.paths import REPORTS
+from bookrec.paths import DATA, REPORTS
 
 K = 10
 RELEVANT_FROM = 4  # v1's rule: a held-out rating of 4 or more makes a book relevant
@@ -40,13 +45,17 @@ V1_PUBLISHED = {
     "Item-based CF: RMSE": 6.4017,
 }
 
+API_TABLE = "v1 API table: dot product, top 50"
+COSINE_TABLE = "Cosine table, top 50 (what v1 measured)"
 
-def run() -> dict:
-    split = load_split()
+
+def score_models(split: Split, api_table: csr_matrix) -> dict:
+    """Every model on one split: rating errors, and top-10 metrics for those that can rank.
+    `api_table` is the dot-product table to score: v1's own file on v1's split, the same
+    method rebuilt on any other split."""
     train_items = split.train_items()
     popularity = split.popularity()
     relevant = relevant_items(split.test, RELEVANT_FROM)
-
     rating_rows: list[dict] = []
     ranking_rows: list[dict] = []
 
@@ -78,12 +87,37 @@ def run() -> dict:
     cosine_top_n = models.keep_top_n(item_cf.similarity)
     del item_cf
 
-    api = models.v1_api_similarity()
-    api_rebuilt_identical = _same_sparse(api, models.rebuild_v1_api_similarity(split))
-    score("v1 API table: dot product, top 50", models.similarity_scores(split, api))
-    score("Cosine table, top 50 (what v1 measured)", models.similarity_scores(split, cosine_top_n))
+    score(API_TABLE, models.similarity_scores(split, api_table))
+    score(COSINE_TABLE, models.similarity_scores(split, cosine_top_n))
 
-    by_name = {r["model"]: r for r in rating_rows}
+    return {
+        "split": {
+            "fingerprint": split.fingerprint(),
+            "users": split.n_users,
+            "books": split.n_items,
+            "train": len(split.train),
+            "test": len(split.test),
+        },
+        "rating": rating_rows,
+        "ranking": {
+            "k": K,
+            "relevant_from": RELEVANT_FROM,
+            "users": len(relevant),
+            "rows": ranking_rows,
+            "v1_user_cf_users_tied_at_k": v1_user_ties,
+        },
+        "v1_user_cf_precision_recall": [float(v1_user_precision), float(v1_user_recall)],
+    }
+
+
+def run() -> dict:
+    """Stage 1, on v1's split."""
+    split = load_split()
+    api = models.v1_api_similarity()
+    results = score_models(split, api)
+
+    by_name = {r["model"]: r for r in results["rating"]}
+    precision, recall = results.pop("v1_user_cf_precision_recall")
     rerun = {
         "Ratings after v1's cleaning": split.cleaned_rows,
         "Ratings after the 10-and-10 filter": len(split.filtered),
@@ -93,8 +127,8 @@ def run() -> dict:
         "Held-out ratings": len(split.test),
         "User-based CF: MAE": by_name["v1 user-based CF, as shipped"]["mae"],
         "User-based CF: RMSE": by_name["v1 user-based CF, as shipped"]["rmse"],
-        "User-based CF: Precision@10": float(v1_user_precision),
-        "User-based CF: Recall@10": float(v1_user_recall),
+        "User-based CF: Precision@10": precision,
+        "User-based CF: Recall@10": recall,
         "Item-based CF: MAE": by_name["v1 item-based CF, as shipped"]["mae"],
         "Item-based CF: RMSE": by_name["v1 item-based CF, as shipped"]["rmse"],
     }
@@ -107,36 +141,25 @@ def run() -> dict:
             "what": "API table rebuilt from v1's code equals v1/models/topk_item_sim.npz",
             "published": None,
             "rerun": None,
-            "match": api_rebuilt_identical,
+            "match": _same_sparse(api, models.rebuild_v1_api_similarity(split)),
         }
     )
-
     return {
-        "split": {
-            "fingerprint": split.fingerprint(),
-            "users": split.n_users,
-            "books": split.n_items,
-            "train": len(split.train),
-            "test": len(split.test),
-        },
+        "split": results["split"],
         "reproduction": reproduction,
-        "rating": rating_rows,
-        "ranking": {
-            "k": K,
-            "relevant_from": RELEVANT_FROM,
-            "users": len(relevant),
-            "rows": ranking_rows,
-            "v1_user_cf_users_tied_at_k": v1_user_ties,
-        },
+        "rating": results["rating"],
+        "ranking": results["ranking"],
         "data_notes": _data_notes(split),
-        "environment": {
-            "python": platform.python_version(),
-            "numpy": np.__version__,
-            "pandas": pd.__version__,
-            "scipy": scipy.__version__,
-            "scikit-learn": sklearn.__version__,
-        },
+        "environment": _environment(),
     }
+
+
+def run_stage2() -> tuple[dict, pd.DataFrame]:
+    """Stage 2: v1's ratings and halves, with books identified by bookrec.books."""
+    cleaned, books, changes = clean_split(load_split())
+    results = score_models(cleaned, models.rebuild_v1_api_similarity(cleaned))
+    results.pop("v1_user_cf_precision_recall")
+    return {**results, "changes": changes, "environment": _environment()}, books
 
 
 def _matches(published: float, rerun: float) -> bool:
@@ -161,13 +184,17 @@ def _data_notes(split: Split) -> dict:
     }
 
 
-# --- Report -------------------------------------------------------------------------------
+def _environment() -> dict:
+    return {
+        "python": platform.python_version(),
+        "numpy": np.__version__,
+        "pandas": pd.__version__,
+        "scipy": scipy.__version__,
+        "scikit-learn": sklearn.__version__,
+    }
 
 
-def write_report(results: dict) -> None:
-    REPORTS.mkdir(parents=True, exist_ok=True)
-    (REPORTS / "phase1-evaluation.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    (REPORTS / "phase1-evaluation.md").write_text(render_markdown(results), encoding="utf-8")
+# --- Reports ------------------------------------------------------------------------------
 
 
 def _table(header: list[str], rows: list[list[str]]) -> str:
@@ -180,19 +207,12 @@ def _fmt(value, spec: str) -> str:
     return "" if value is None else format(value, spec)
 
 
-def render_markdown(r: dict) -> str:
-    s, rk, notes, env = r["split"], r["ranking"], r["data_notes"], r["environment"]
-    count = lambda v: _fmt(v, ",") if isinstance(v, int) else _fmt(v, ".4f")  # noqa: E731
+def _rating_table(rows: list[dict]) -> str:
+    return _table(["Model", "MAE", "RMSE"], [[x["model"], f"{x['mae']:.3f}", f"{x['rmse']:.3f}"] for x in rows])
 
-    reproduction = _table(
-        ["", "v1 notebook", "Re-run now", "Same"],
-        [[x["what"], count(x["published"]), count(x["rerun"]), "yes" if x["match"] else "**no**"] for x in r["reproduction"]],
-    )
-    rating = _table(
-        ["Model", "MAE", "RMSE"],
-        [[x["model"], f"{x['mae']:.3f}", f"{x['rmse']:.3f}"] for x in r["rating"]],
-    )
-    ranking = _table(
+
+def _ranking_table(rows: list[dict]) -> str:
+    return _table(
         ["Model", "Precision@10", "Recall@10", "NDCG@10", "Hit rate", "Coverage", "Avg. popularity"],
         [
             [
@@ -204,11 +224,30 @@ def render_markdown(r: dict) -> str:
                 f"{x['coverage']:.1%}",
                 f"{x['mean_popularity']:.1f}",
             ]
-            for x in rk["rows"]
+            for x in rows
         ],
     )
-    versions = ", ".join(f"{k} {v}" for k, v in env.items())
 
+
+def _versions(env: dict) -> str:
+    return ", ".join(f"{k} {v}" for k, v in env.items())
+
+
+RANKING_METHOD = """A recommendation is a hit when it is one of the user's held-out books rated
+{relevant_from} or more (v1's rule); books the user rated in training are never recommended.
+Rating models rank books by predicted rating; the two table models score each book by its
+similarity to the user's training books. Equal scores go to title order. Higher is better,
+except that a higher average popularity (training ratings per recommended book) means more of
+the same few bestsellers."""
+
+
+def render_stage1(r: dict) -> str:
+    s, rk, notes = r["split"], r["ranking"], r["data_notes"]
+    count = lambda v: _fmt(v, ",") if isinstance(v, int) else _fmt(v, ".4f")  # noqa: E731
+    reproduction = _table(
+        ["", "v1 notebook", "Re-run now", "Same"],
+        [[x["what"], count(x["published"]), count(x["rerun"]), "yes" if x["match"] else "**no**"] for x in r["reproduction"]],
+    )
     return f"""# Phase 1: evaluation
 
 Generated by `python -m bookrec.evaluate`; edit the code, not this file.
@@ -235,7 +274,7 @@ v1's own functions, re-run on the data in `datasets/`, against what its notebook
 
 Error on the held-out ratings, on Book-Crossing's 1-10 scale. Lower is better.
 
-{rating}
+{_rating_table(r['rating'])}
 
 "As shipped" is v1's code unchanged. "Corrected" changes only how averages are taken: over
 the ratings a user or book has, where v1 divided by every user or book in the matrix and so
@@ -245,13 +284,9 @@ didn't rate the book, which v1's item-based model already did.
 ## Recommending 10 books
 
 Each of the {rk['users']:,} users with a held-out rating of {rk['relevant_from']} or more gets
-{rk['k']} books they did not rate in training. A recommendation is a hit when it is one of
-those held-out books (v1's rule). Rating models rank books by predicted rating; the two
-table models score each book by its similarity to the user's training books. Equal scores
-go to title order. Higher is better, except that a higher average popularity (training
-ratings per recommended book) means more of the same few bestsellers.
+{rk['k']} books. {RANKING_METHOD.format(relevant_from=rk['relevant_from'])}
 
-{ranking}
+{_ranking_table(rk['rows'])}
 
 v1's own function gives its user-based CF the slightly different 0.0383 and 0.0848 above
 because it orders tied scores differently, and ties matter: for
@@ -260,22 +295,147 @@ with at least one book ranked below it.
 
 ## Notes on the data
 
-- {notes['duplicate_user_title_pairs']:,} users rated two or more editions that share a title.
-  v1 adds those ratings together in one cell, so a cell can reach
+- {notes['duplicate_user_title_pairs']:,} times, a user rated two or more editions that share a
+  title. v1 adds those ratings together in one cell, so a cell can reach
   {notes['largest_training_cell']:.0f} on a 1-10 scale.
 - {notes['held_out_titles_also_in_training']:,} held-out ratings are for a title the same user
   also rated in training. No model can recommend those, since training books are excluded.
-- Both are left as v1 had them here, so that v1's numbers reproduce. Phase 2 cleans them up.
+- Both are left as v1 had them here, so that v1's numbers reproduce. Stage 2
+  ([phase2-books.md](phase2-books.md)) cleans them up.
 
-Environment: {versions}.
+Environment: {_versions(r['environment'])}.
 """
 
 
+def render_stage2(r: dict, stage1: dict) -> str:
+    s, rk, c = r["split"], r["ranking"], r["changes"]
+    held_out_fewer = stage1["split"]["test"] - s["test"]
+    users_before = stage1["ranking"]["users"]
+    users_scored = (
+        f"the same {rk['users']:,} users are scored"
+        if users_before == rk["users"]
+        else f"{users_before:,} users were scored before, {rk['users']:,} now"
+    )
+    before_rank = {x["model"]: x for x in stage1["ranking"]["rows"]}
+    before_rate = {x["model"]: x for x in stage1["rating"]}
+    arrow = lambda a, b, spec: f"{format(a, spec)} → {format(b, spec)}"  # noqa: E731
+    comparison = _table(
+        ["Model", "Hit rate", "NDCG@10", "Coverage", "Avg. popularity"],
+        [
+            [
+                x["model"],
+                arrow(before_rank[x["model"]]["hit_rate"], x["hit_rate"], ".1%"),
+                arrow(before_rank[x["model"]]["ndcg"], x["ndcg"], ".4f"),
+                arrow(before_rank[x["model"]]["coverage"], x["coverage"], ".1%"),
+                arrow(before_rank[x["model"]]["mean_popularity"], x["mean_popularity"], ".1f"),
+            ]
+            for x in rk["rows"]
+        ],
+    )
+    rating_comparison = _table(
+        ["Model", "MAE", "RMSE"],
+        [
+            [
+                x["model"],
+                arrow(before_rate[x["model"]]["mae"], x["mae"], ".3f"),
+                arrow(before_rate[x["model"]]["rmse"], x["rmse"], ".3f"),
+            ]
+            for x in r["rating"]
+        ],
+    )
+    return f"""# Stage 2: which ratings are about the same book
+
+Generated by `python -m bookrec.evaluate`; edit the code, not this file.
+
+v1 identified a book by its exact title. Editions with different titles were different
+books ("Bel Canto" and "Bel Canto: A Novel"), different books with the same title were one
+("Mortal Fear" by Greg Iles and by Robin Cook, "Lightning" by Danielle Steel and by Dean
+Koontz), and HTML codes stayed in titles (`Angels &amp; Demons`).
+
+## The rules
+
+`bookrec/books.py` gives every rating a book:
+
+- Titles are compared without case, punctuation, a leading "The", "A" or "An", bracketed
+  edition notes ("(Movie Tie-In)") and generic subtitles (": A Novel"). Numbers in brackets are
+  kept, so the volumes of a series stay apart, and real subtitles are kept, so "Dune" and
+  "Dune: House Atreides" stay apart.
+- Within a title, authors whose names loosely match are one author: misspellings, reversed
+  names, initials, garbled accents and two pen names (Richard Bachman, Phyllis White).
+- A second author makes a separate book only with at least {MIN_TRAINING_RATINGS_TO_SPLIT} training ratings; smaller groups
+  are usually a publisher or editor in the author field ("Golden Books" for *Jurassic Park*)
+  and stay with the main book. Only training ratings decide, so the held-out ratings never
+  shape the books.
+- A user's ratings of the same book are averaged, and a held-out rating of a book the user
+  also rated in training is dropped: no recommender would suggest a book the user has read.
+
+Every rule leans towards changing nothing. Known misses: translations of *The Odyssey* stay
+apart, listed under their translators, and *The Diary of Ellen Rimbauer* splits between its
+two credited names. [`data/books.csv`](../data/books.csv) lists every book with the v1 titles
+and ISBNs it merges.
+
+## What changed
+
+| | |
+|---|---|
+| v1's books (distinct titles) | {c['v1_titles']:,} |
+| Books now | {c['books']:,} |
+| Books that merge two or more v1 titles | {c['books_merging_several_v1_titles']:,} |
+| v1 titles split between different authors' books | {c['v1_titles_split_by_author']:,} |
+| Titles with HTML codes, decoded | {c['titles_with_html_codes']:,} |
+| Repeat ratings of one book by one user, averaged | {c['repeat_ratings_averaged']:,} |
+| Held-out ratings dropped as already read in training | {c['held_out_dropped_as_already_read']:,} |
+| Training / held-out ratings now | {s['train']:,} / {s['test']:,} |
+
+The users and the train/held-out halves are v1's, so the numbers below compare directly with
+[stage 1](phase1-evaluation.md).
+
+## Recommending 10 books: stage 1 → stage 2
+
+The held-out set is {held_out_fewer:,} ratings smaller: {c['held_out_dropped_as_already_read']:,} were of a book the user had
+already rated in training, which no model could recommend, and {held_out_fewer - c['held_out_dropped_as_already_read']:,} were repeats, now
+averaged. Dropping ratings no model could hit leaves the hits unchanged, so hit rate and
+precision compare directly ({users_scored}); recall and NDCG, which divide by the number of
+held-out books, rise slightly for every model.
+
+{comparison}
+
+## Predicting a rating: stage 1 → stage 2
+
+{rating_comparison}
+
+## Stage 2 in full
+
+{rk['users']:,} users have a held-out rating of {rk['relevant_from']} or more. {RANKING_METHOD.format(relevant_from=rk['relevant_from'])}
+The dot-product and cosine tables are rebuilt with v1's method on the cleaned books.
+
+{_ranking_table(rk['rows'])}
+
+{_rating_table(r['rating'])}
+
+Environment: {_versions(r['environment'])}.
+"""
+
+
+def write_reports(stage1: dict, stage2: dict, books: pd.DataFrame) -> None:
+    REPORTS.mkdir(parents=True, exist_ok=True)
+    DATA.mkdir(parents=True, exist_ok=True)
+    for name, results, text in (
+        ("phase1-evaluation", stage1, render_stage1(stage1)),
+        ("phase2-books", stage2, render_stage2(stage2, stage1)),
+    ):
+        (REPORTS / f"{name}.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+        (REPORTS / f"{name}.md").write_text(text, encoding="utf-8")
+    columns = ["title", "author", "ratings", "v1_titles", "isbns", "book_key"]
+    books.rename_axis("book_id")[columns].to_csv(DATA / "books.csv", encoding="utf-8", lineterminator="\n")
+
+
 def main() -> None:
-    results = run()
-    write_report(results)
-    failed = [x["what"] for x in results["reproduction"] if not x["match"]]
-    print(f"Wrote {REPORTS / 'phase1-evaluation.md'}")
+    stage1 = run()
+    stage2, books = run_stage2()
+    write_reports(stage1, stage2, books)
+    print(f"Wrote {REPORTS / 'phase1-evaluation.md'}, {REPORTS / 'phase2-books.md'} and {DATA / 'books.csv'}")
+    failed = [x["what"] for x in stage1["reproduction"] if not x["match"]]
     if failed:
         raise SystemExit("v1 did not reproduce: " + "; ".join(failed))
 
