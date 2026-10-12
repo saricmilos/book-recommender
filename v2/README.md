@@ -11,8 +11,8 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 75 tests, under a minute, v1's re-run included
-python -m bookrec.evaluate      # writes the reports in reports/ and data/books.csv
+pytest                          # 89 tests, about 2 minutes, v1's re-run included
+python -m bookrec.evaluate      # about 7 minutes: writes the reports in reports/ and data/books.csv
 ```
 
 Book details were fetched once from [Open Library](https://openlibrary.org) with
@@ -27,7 +27,7 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
 |---|---|---|
 | 1. Evaluation | Re-run v1, add baselines, score v1 again under the same rules | Done: [report](reports/phase1-evaluation.md) |
 | 2. Data quality | Identify books properly: merge editions, split different books that share a title; fetch book details once | Done: [report](reports/phase2-books.md), [books](data/books.csv), [details](data/book_details.jsonl) |
-| 3. Models | Use the 0 ratings as signals of interest, add text embeddings, combine both | |
+| 3. Models | Train on every interaction with the books, rated or not; tune collaborative models on a validation set; then add a text model and combine both | Collaborative models done: [report](reports/phase3-models.md); text model next |
 | 4. Demo | Recommendations on saricmilos.com, with no server | |
 
 ## What stage 1 found
@@ -75,11 +75,37 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
 **The bar for v2's models:** NDCG@10 above 0.092 and a hit rate above 30.7%, with the
 cosine table's variety rather than the dot-product table's bestsellers.
 
+## What stage 3 found, so far
+
+- **One rule gives six times the training data.** Training may now use any interaction in
+  Book-Crossing with the 2,405 books, by any user, rated or not, except one that covers a
+  held-out user and book through any edition. That takes training from 45,145 interactions to
+  280,669 (a median of 81 per book instead of 13), and the held-out ratings stay exactly as
+  they were. A book a user already has, rated or not, is never recommended to them.
+- **More data helps the similarity models; raw counts get worse.** With fixed settings, EASE
+  goes from NDCG@10 0.108 to 0.148, RP3beta from 0.096 to 0.152 and the cosine table v1
+  measured from 0.095 to 0.108. Both sources help on their own: other readers' interactions,
+  which can't carry anything about the held-out ratings, and the benchmark users' own unrated
+  books. The raw dot-product table v1's API serves gets worse (0.088 to 0.045) and the most
+  popular books stay flat: unrated books lean even more towards bestsellers.
+- **Tuned on a validation set, EASE recommends best:** NDCG@10 0.162 and a 46.5% hit rate,
+  against stage 2's 0.092 and 30.7%, with settings chosen without ever looking at the
+  held-out ratings. RP3beta is nearly as accurate (0.158, 45.4%) and more varied: it
+  recommends 67% of the books (EASE 55%) and fewer bestsellers (58 training ratings per
+  recommended book against 65). Stage 2's cosine table was more varied still (70%, 23), so
+  more accuracy has cost some variety.
+
+**The bar for the text model and the hybrid:** NDCG@10 above 0.162 and a hit rate above
+46.5%, or the same accuracy with more variety.
+
 ## Code
 
 - `bookrec/data.py`: the shared split, produced by v1's own functions (v1 is imported, never changed).
 - `bookrec/books.py`: which ratings are about the same book.
 - `bookrec/openlibrary.py`: book details from Open Library, fetched once and cached.
+- `bookrec/interactions.py`: stage 3's training data, the rule above, and the validation set.
+- `bookrec/topn.py`: popularity, item and user kNN, RP3beta and EASE.
+- `bookrec/stage3.py`: the extra-data comparison, the tuning, and the stage 3 report.
 - `bookrec/metrics.py`: rating errors and top-10 metrics.
 - `bookrec/models.py`: baselines, v1 as shipped, v1 corrected, and the similarity tables.
 - `bookrec/evaluate.py`: runs everything and writes the report.
