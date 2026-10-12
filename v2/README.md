@@ -11,8 +11,9 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 93 tests, about a minute, v1's re-run included
+pytest                          # 107 tests, under 3 minutes, v1's re-run included
 python -m bookrec.evaluate      # about 12 minutes: writes the reports in reports/ and data/books.csv
+python -m bookrec.export        # about 2 minutes: writes the demo's data into the site
 ```
 
 Book details were fetched once from [Open Library](https://openlibrary.org) with
@@ -28,7 +29,7 @@ Every stage is measured on the same split as v1, so the numbers stay comparable.
 | 1. Evaluation | Re-run v1, add baselines, score v1 again under the same rules | Done: [report](reports/phase1-evaluation.md) |
 | 2. Data quality | Identify books properly: merge editions, split different books that share a title; fetch book details once | Done: [report](reports/phase2-books.md), [books](data/books.csv), [details](data/book_details.jsonl) |
 | 3. Models | Train on every interaction with the books, rated or not; tune collaborative models and a text model on a validation set; blend them | Done: [report](reports/phase3-models.md) |
-| 4. Demo | Recommendations on saricmilos.com, with no server | |
+| 4. Demo | Recommendations on saricmilos.com, with no server: each book's ten worked out ahead of time | Done: [the demo](https://www.saricmilos.com/projects/book-recommender) |
 
 ## What stage 1 found
 
@@ -103,7 +104,25 @@ cosine table's variety rather than the dot-product table's bestsellers.
   alone and 0.092 and 30.7% after stage 2. It recommends 60% of the books and finds 12.2% of
   the less popular half's held-out ratings; RP3beta alone finds the most of those (14.8%).
 
-**The model for the demo:** the blend. Next, stage 4 puts it on saricmilos.com.
+**The model for the demo:** the blend.
+
+## Stage 4: the demo
+
+[saricmilos.com/projects/book-recommender](https://www.saricmilos.com/projects/book-recommender)
+runs with no server. `bookrec/export.py` works out, for each of the 2,405 books, the ten books
+the blend recommends to a reader of that book (trained on all interactions, at the settings
+the stage 3 report chose) and the ten v1's API returned for it, and writes them, with each
+book's title, author, year, Open Library cover and a short description, into the site, which
+loads them on demand. A visitor searches for a book and switches between v2 and v1.
+
+Two rules shape what the demo shows, and neither changes the model or its scores:
+
+- **One edition per list.** Editions stage 2 kept apart, such as "Harry Potter and the
+  Sorcerer's Stone" with and without "(Book 1)", appear once.
+- **Wild Animus is never recommended.** Its publisher gave copies away through BookCrossing by
+  the thousand, so its 2,480 readers (twice the next book's, with a mean rating of 4.4 against
+  a typical 7.7) say who received a copy, not who chose it, and it would top every list. The
+  rule, more than 1,000 readers and a mean rating below 5, picks no other book.
 
 ## Code
 
@@ -114,6 +133,7 @@ cosine table's variety rather than the dot-product table's bestsellers.
 - `bookrec/topn.py`: popularity, item and user kNN, RP3beta and EASE.
 - `bookrec/text.py`: the text model.
 - `bookrec/stage3.py`: the extra-data comparison, the tuning, the blend, and the stage 3 report.
+- `bookrec/export.py`: the demo's data, written into saricmilos.com.
 - `bookrec/metrics.py`: rating errors and top-10 metrics.
 - `bookrec/models.py`: baselines, v1 as shipped, v1 corrected, and the similarity tables.
 - `bookrec/evaluate.py`: runs everything and writes the report.

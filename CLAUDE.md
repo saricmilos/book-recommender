@@ -41,6 +41,14 @@ not, except one that covers a held-out user and book through any edition
 is never recommended to them. Settings are chosen only on `validation_split()`, never on the
 held-out ratings, which score each chosen model once; widen a grid whose best sits at an edge.
 
+The demo on saricmilos.com (`/projects/book-recommender`) runs with no server: `python -m
+bookrec.export` writes its data, from the settings in `v2/reports/phase3-models.json`, into
+the site's `src/content/book-recommender/` (`BOOKREC_SITE` names the site's folder, else
+`C:\dev\sites\saricmilos.com`). Re-run it after any change to the model or the books, and
+commit the result in the site's repository; pushing the site's `main` deploys it (Vercel), so
+that waits for Miloš. Two display rules live there, not in the model: one edition per list,
+and Wild Animus never recommended.
+
 Book details come from Open Library once: `python -m bookrec.openlibrary` (about 45 minutes,
 1 request a second) writes `v2/data/book_details.jsonl`, which is committed; its raw responses
 are cached in the gitignored `v2/data/openlibrary-cache/`, so a re-run is offline and fast.

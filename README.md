@@ -52,7 +52,9 @@ says how to run it and what each stage found.
    on a validation set, reaches NDCG@10 0.173 and a 48.4% hit rate, against 0.092 and 30.7%
    after stage 2 and 0.087 and 28.3% for v1's user-based model as shipped, on the same
    held-out ratings.
-4. A demo on [saricmilos.com](https://www.saricmilos.com) that needs no server.
+4. Demo, done: [saricmilos.com/projects/book-recommender](https://www.saricmilos.com/projects/book-recommender),
+   with no server. Pick a book and see the ten books v2 recommends to its readers, or the ten
+   v1's API returned.
 
 ## Data
 
