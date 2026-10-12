@@ -4,6 +4,8 @@ Stage 1: check that v1's code still gives v1's published numbers, then score bas
 v1's models on v1's split (reports/phase1-evaluation.md).
 Stage 2: the same models on the same ratings, with books identified properly
 (reports/phase2-books.md, and data/books.csv listing what every book merged).
+Stage 3: more training data and tuned models, on the same held-out ratings
+(reports/phase3-models.md; the code is in bookrec/stage3.py).
 
     python -m bookrec.evaluate
 """
@@ -24,6 +26,7 @@ from bookrec.books import MIN_TRAINING_RATINGS_TO_SPLIT, clean_split
 from bookrec.data import Split, load_split
 from bookrec.metrics import ranking_metrics, rating_errors, relevant_items, tied_at_k
 from bookrec.paths import DATA, REPORTS
+from bookrec.stage3 import render_stage3, run_stage3
 
 K = 10
 RELEVANT_FROM = 4  # v1's rule: a held-out rating of 4 or more makes a book relevant
@@ -495,12 +498,13 @@ Three checks, each with its full list:
 </details>"""
 
 
-def write_reports(stage1: dict, stage2: dict, books: pd.DataFrame) -> None:
+def write_reports(stage1: dict, stage2: dict, books: pd.DataFrame, stage3: dict) -> None:
     REPORTS.mkdir(parents=True, exist_ok=True)
     DATA.mkdir(parents=True, exist_ok=True)
     for name, results, text in (
         ("phase1-evaluation", stage1, render_stage1(stage1)),
         ("phase2-books", stage2, render_stage2(stage2, stage1)),
+        ("phase3-models", stage3, render_stage3(stage3, stage2, _versions(_environment()))),
     ):
         (REPORTS / f"{name}.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
         (REPORTS / f"{name}.md").write_text(text, encoding="utf-8")
@@ -511,8 +515,9 @@ def write_reports(stage1: dict, stage2: dict, books: pd.DataFrame) -> None:
 def main() -> None:
     stage1 = run()
     stage2, books = run_stage2()
-    write_reports(stage1, stage2, books)
-    print(f"Wrote {REPORTS / 'phase1-evaluation.md'}, {REPORTS / 'phase2-books.md'} and {DATA / 'books.csv'}")
+    stage3 = run_stage3(progress=lambda s: print(s, flush=True))
+    write_reports(stage1, stage2, books, stage3)
+    print(f"Wrote the reports in {REPORTS} and {DATA / 'books.csv'}")
     failed = [x["what"] for x in stage1["reproduction"] if not x["match"]]
     if failed:
         raise SystemExit("v1 did not reproduce: " + "; ".join(failed))
