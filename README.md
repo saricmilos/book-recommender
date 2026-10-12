@@ -45,12 +45,13 @@ says how to run it and what each stage found.
    one. Identified properly, v1's 2,508 books are 2,405, and the cosine similarity table v1
    measured now recommends best (NDCG@10 0.070 → 0.092). Covers, descriptions and subjects
    come from [Open Library](https://openlibrary.org), fetched once and kept in the repository.
-3. Models, collaborative part done ([report](v2/reports/phase3-models.md)): training now uses
-   every interaction in Book-Crossing with the 2,405 books, rated or not (62.3% of Book-Crossing's
-   ratings are 0, a book seen but not rated), except any that covers a held-out user and book;
-   that is six times the data. EASE, tuned on a validation set, reaches NDCG@10 0.162 and a
-   46.5% hit rate, against 0.092 and 30.7% after stage 2. Next: a text model from the book
-   descriptions, and a hybrid.
+3. Models, done ([report](v2/reports/phase3-models.md)): training now uses every interaction
+   in Book-Crossing with the 2,405 books, rated or not (62.3% of Book-Crossing's ratings are 0,
+   a book seen but not rated), except any that covers a held-out user and book; that is six
+   times the data. A blend of EASE, RP3beta and a text model of the book descriptions, tuned
+   on a validation set, reaches NDCG@10 0.173 and a 48.4% hit rate, against 0.092 and 30.7%
+   after stage 2 and 0.087 and 28.3% for v1's user-based model as shipped, on the same
+   held-out ratings.
 4. A demo on [saricmilos.com](https://www.saricmilos.com) that needs no server.
 
 ## Data

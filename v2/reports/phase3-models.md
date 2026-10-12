@@ -77,13 +77,26 @@ Each model's settings were chosen on a validation set, never on the held-out rat
 model was trained on all interactions and scored once. Stage 2's best were NDCG@10
 0.0917 (Cosine table, top 50 (what v1 measured)) and a hit rate of 30.7% (v1 API table: dot product, top 50).
 
-| Model | Settings chosen | Validation NDCG@10 | Precision@10 | Recall@10 | NDCG@10 | Hit rate | Coverage | Avg. popularity |
-|---|---|---|---|---|---|---|---|---|
-| Most popular | none |  | 0.0192 | 0.0445 | **0.0326** | 16.3% | 2.1% | 128.7 |
-| Item kNN (cosine) | k = 8, shrink = 10 | 0.1171 | 0.0670 | 0.1523 | **0.1400** | 41.9% | 48.6% | 51.2 |
-| User kNN | k = 400 | 0.0977 | 0.0528 | 0.1254 | **0.1148** | 35.4% | 70.6% | 72.0 |
-| RP3beta | α = 0.8, β = 0.6, k = 200 | 0.1317 | 0.0753 | 0.1699 | **0.1580** | 45.4% | 67.3% | 57.9 |
-| EASE | λ = 100 | 0.1287 | 0.0777 | 0.1759 | **0.1618** | 46.5% | 54.8% | 64.6 |
+| Model | Settings chosen | Validation NDCG@10 | Precision@10 | Recall@10 | NDCG@10 | Hit rate | Recall, less popular half | Coverage | Avg. popularity |
+|---|---|---|---|---|---|---|---|---|---|
+| Most popular | none |  | 0.0192 | 0.0445 | **0.0326** | 16.3% | 0.0% | 2.1% | 128.7 |
+| Item kNN (cosine) | k = 8, shrink = 10 | 0.1171 | 0.0670 | 0.1523 | **0.1400** | 41.9% | 11.5% | 48.6% | 51.2 |
+| User kNN | k = 400 | 0.0977 | 0.0528 | 0.1254 | **0.1148** | 35.4% | 4.0% | 70.6% | 72.0 |
+| RP3beta | α = 0.8, β = 0.6, k = 200 | 0.1317 | 0.0753 | 0.1699 | **0.1580** | 45.4% | 14.8% | 67.3% | 57.9 |
+| EASE | λ = 100 | 0.1287 | 0.0777 | 0.1759 | **0.1618** | 46.5% | 8.3% | 54.8% | 64.6 |
+| Text (TF-IDF) | k = 10 | 0.0827 | 0.0483 | 0.1147 | **0.0994** | 31.7% | 12.7% | 59.3% | 24.8 |
+| Blend: EASE + RP3beta + text | EASE = 0.6, RP3beta = 0.3, text = 0.1, text k = 20 | 0.1430 | 0.0833 | 0.1853 | **0.1732** | 48.4% | 12.2% | 60.0% | 59.7 |
+
+"Recall, less popular half" is the share of the held-out ratings of 4 or more for the
+1,193 books with fewer than 81 training interactions that made the user's top 10:
+how well a model finds the books collaborative data knows least about.
+
+The text model (`bookrec/text.py`) compares books by the words of their title, author and
+Open Library subjects and description, weighted by TF-IDF; it learns nothing from who reads
+what, beyond the user's own books. The blend turns each user's scores from EASE, RP3beta (at
+their tuned settings) and the text model into z-scores over the books the user could be
+recommended, and adds them with weights that sum to 1, in steps of 0.1 with text at most 0.5,
+for text k of 5, 10, 20, 50; the weights too were chosen on the validation set.
 
 ## How the settings were chosen
 
@@ -245,6 +258,42 @@ trained on all interactions.
 | λ = 1000 | 0.1152 | 36.7% | 36.1% |
 | λ = 2500 | 0.1012 | 34.2% | 27.7% |
 | λ = 5000 | 0.0859 | 30.6% | 21.7% |
+
+</details>
+
+<details><summary>Text (TF-IDF): 7 settings tried</summary>
+
+| Settings | Validation NDCG@10 | Validation hit rate | Coverage |
+|---|---|---|---|
+| k = 3 | 0.0729 | 25.0% | 56.8% |
+| k = 5 | 0.0784 | 26.1% | 59.3% |
+| k = 10 | 0.0827 | 27.2% | 60.7% |
+| k = 20 | 0.0823 | 27.0% | 61.7% |
+| k = 50 | 0.0793 | 26.0% | 60.1% |
+| k = 100 | 0.0782 | 25.3% | 59.0% |
+| k = 300 | 0.0764 | 25.0% | 57.3% |
+
+</details>
+
+<details><summary>Blend: EASE + RP3beta + text: 204 settings tried, the best 15 shown</summary>
+
+| Settings | Validation NDCG@10 | Validation hit rate | Coverage |
+|---|---|---|---|
+| EASE = 0.6, RP3beta = 0.3, text = 0.1, text k = 20 | 0.1430 | 42.3% | 61.3% |
+| EASE = 0.5, RP3beta = 0.3, text = 0.2, text k = 50 | 0.1429 | 42.3% | 63.2% |
+| EASE = 0.6, RP3beta = 0.3, text = 0.1, text k = 10 | 0.1428 | 42.2% | 61.6% |
+| EASE = 0.5, RP3beta = 0.3, text = 0.2, text k = 20 | 0.1424 | 42.3% | 64.3% |
+| EASE = 0.5, RP3beta = 0.4, text = 0.1, text k = 20 | 0.1423 | 42.2% | 63.3% |
+| EASE = 0.4, RP3beta = 0.5, text = 0.1, text k = 20 | 0.1422 | 42.2% | 64.5% |
+| EASE = 0.4, RP3beta = 0.5, text = 0.1, text k = 50 | 0.1422 | 42.2% | 64.0% |
+| EASE = 0.6, RP3beta = 0.2, text = 0.2, text k = 50 | 0.1421 | 42.2% | 62.2% |
+| EASE = 0.4, RP3beta = 0.5, text = 0.1, text k = 10 | 0.1421 | 42.1% | 64.3% |
+| EASE = 0.6, RP3beta = 0.3, text = 0.1, text k = 50 | 0.1420 | 42.2% | 61.2% |
+| EASE = 0.5, RP3beta = 0.4, text = 0.1, text k = 10 | 0.1420 | 42.0% | 63.4% |
+| EASE = 0.6, RP3beta = 0.2, text = 0.2, text k = 20 | 0.1418 | 42.3% | 63.4% |
+| EASE = 0.4, RP3beta = 0.4, text = 0.2, text k = 50 | 0.1418 | 42.1% | 65.2% |
+| EASE = 0.4, RP3beta = 0.4, text = 0.2, text k = 20 | 0.1418 | 42.2% | 65.7% |
+| EASE = 0.5, RP3beta = 0.4, text = 0.1, text k = 50 | 0.1418 | 42.0% | 62.5% |
 
 </details>
 
