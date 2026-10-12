@@ -103,11 +103,20 @@ def never_recommended(data) -> set[int]:
     return set(g[(g["readers"] > 1000) & (g["mean_rating"] < 5)].index.tolist())
 
 
+# Abbreviations an edition's title may spell out ("Mt. Everest", "Mount Everest")
+_SPELLED_OUT = {"mt": "mount", "st": "saint", "dr": "doctor", "mr": "mister"}
+
+
 def same_book_keys(records: list[dict]) -> list[str]:
     """A key per book that two editions stage 2 kept apart share: the title key without its
-    bracketed volume number, and the author's surname ("Harry Potter and the Sorcerer's Stone"
-    and "... (Book 1)"). Lists show one book of each key."""
-    return [re.sub(r" #[0-9-]+$", "", title_key(r["title"])) + " | " + author_key(r["author"]) for r in records]
+    bracketed volume number and with abbreviations spelled out, and the author's surname
+    ("Harry Potter and the Sorcerer's Stone" and "... (Book 1)"; "Into Thin Air: ... Mt.
+    Everest Disaster" and "... Mount Everest Disaster"). Lists show one book of each key."""
+    keys = []
+    for r in records:
+        title = re.sub(r" #[0-9-]+$", "", title_key(r["title"]))
+        keys.append(" ".join(_SPELLED_OUT.get(w, w) for w in title.split(" ")) + " | " + author_key(r["author"]))
+    return keys
 
 
 def first_distinct(candidates, keys: list[str], own: int, n: int) -> list[int]:
@@ -207,7 +216,7 @@ def export(out: Path = OUT) -> dict:
         "books.json": {"fields": ["title", "author", "year", "cover", "readers"], "books": books},
         "similar.json": similar,
         "descriptions.json": descriptions,
-        "results.json": results(),
+        "results.json": {**results(), "lists": list_stats(similar, [b[0] for b in books])},
         "findings.json": named_findings(findings.findings(data), books),
     }
     for name, content in files.items():
@@ -215,15 +224,42 @@ def export(out: Path = OUT) -> dict:
     return {name: (out / name).stat().st_size for name in files}
 
 
+def wilson(p: float, n: int, z: float = 1.96) -> tuple[float, float]:
+    """The 95% Wilson interval of a proportion p over n."""
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return float(centre - half), float(centre + half)
+
+
+def list_stats(similar: dict[str, list[list[int]]], titles: list[str]) -> dict:
+    """How much each version's lists repeat themselves: the book in the most lists and the share
+    of lists it is in, and how many different books the lists hold between them."""
+    out = {}
+    for version, lists in similar.items():
+        counts = np.bincount([j for row in lists for j in row], minlength=len(titles))
+        top = int(np.argmax(counts))
+        out[version] = {
+            "most_listed": titles[top],
+            "most_listed_share": float(counts[top] / len(lists)),
+            "books_listed": int((counts > 0).sum()),
+        }
+    return out
+
+
 def results() -> dict:
-    """The numbers the page shows, from the reports: every row on the same held-out ratings."""
+    """The numbers the page shows, from the reports: every row on the same held-out ratings,
+    with a 95% interval for its hit rate over the users scored."""
     stage2 = json.loads((REPORTS / "phase2-books.json").read_text(encoding="utf-8"))
     stage3 = json.loads((REPORTS / "phase3-models.json").read_text(encoding="utf-8"))
     pick = lambda rows, name: next(x for x in rows if x["model"] == name)  # noqa: E731
-    keep = lambda x: {k: x[k] for k in ("ndcg", "hit_rate", "coverage", "mean_popularity")}  # noqa: E731
+    users = stage3["users_scored"]
+    keep = lambda x: {  # noqa: E731
+        **{k: x[k] for k in ("ndcg", "hit_rate", "coverage", "mean_popularity")},
+        "hit_rate_ci": wilson(x["hit_rate"], users),
+    }
     rows2, rows3 = stage2["ranking"]["rows"], stage3["tuned"]
     return {
-        "users": stage3["users_scored"],
+        "users": users,
         "training": stage3["counts"]["training_interactions"],
         "rows": [
             {"label": "Most popular books", **keep(pick(rows3, "Most popular"))},

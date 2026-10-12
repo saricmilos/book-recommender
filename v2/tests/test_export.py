@@ -44,3 +44,25 @@ def test_first_distinct_keeps_one_per_key_and_never_the_book_itself():
 def test_never_recommended_is_wild_animus_alone():
     data = load_interactions()
     assert [data.split.titles[i] for i in export.never_recommended(data)] == ["Wild Animus"]
+
+
+def test_same_book_keys_spell_out_abbreviations():
+    records = [
+        {"title": "Into Thin Air : A Personal Account of the Mt. Everest Disaster", "author": "JON KRAKAUER"},
+        {"title": "Into Thin Air : A Personal Account of the Mount Everest Disaster", "author": "Jon Krakauer"},
+        {"title": "Dune", "author": "Frank Herbert"},
+    ]
+    keys = export.same_book_keys(records)
+    assert keys[0] == keys[1] != keys[2]
+
+
+def test_wilson_interval():
+    lo, hi = export.wilson(0.5, 100)
+    assert lo == pytest.approx(0.4038, abs=1e-4) and hi == pytest.approx(0.5962, abs=1e-4)
+
+
+def test_list_stats():
+    similar = {"v1": [[2, 1], [2, 0], [2, 1]], "v2": [[1, 2], [0, 2], [0, 1]]}
+    stats = export.list_stats(similar, ["a", "b", "c"])
+    assert stats["v1"] == {"most_listed": "c", "most_listed_share": 1.0, "books_listed": 3}
+    assert stats["v2"]["most_listed_share"] == pytest.approx(2 / 3)

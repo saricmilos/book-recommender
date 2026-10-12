@@ -11,7 +11,7 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 118 tests, about 4 minutes, v1's re-run included
+pytest                          # 121 tests, under 3 minutes, v1's re-run included
 python -m bookrec.evaluate      # about 12 minutes: writes the reports in reports/ and data/books.csv
 python -m bookrec.export        # about 2 minutes: writes the demo's data into the site
 ```
@@ -113,12 +113,15 @@ runs with no server. `bookrec/export.py` works out, for each of the 2,405 books,
 the blend recommends to a reader of that book (trained on all interactions, at the settings
 the stage 3 report chose) and the ten v1's API returned for it, and writes them, with each
 book's title, author, year, Open Library cover and a short description, into the site, which
-loads them on demand. A visitor searches for a book and switches between v2 and v1.
+loads them on demand. A visitor searches for a book and sees v2's ten and v1's ten one above the
+other. The export also writes the page's results, with a 95% interval for each hit rate, and
+how much each version's lists repeat themselves (v1 puts one book in 30% of its lists).
 
 Two rules shape what the demo shows, and neither changes the model or its scores:
 
 - **One edition per list.** Editions stage 2 kept apart, such as "Harry Potter and the
-  Sorcerer's Stone" with and without "(Book 1)", appear once.
+  Sorcerer's Stone" with and without "(Book 1)", appear once, as do titles that differ by an
+  abbreviation ("Mt. Everest", "Mount Everest").
 - **Wild Animus is never recommended.** Its publisher gave copies away through BookCrossing by
   the thousand, so its 2,480 readers (twice the next book's, with a mean rating of 4.4 against
   a typical 7.7) say who received a copy, not who chose it, and it would top every list. The
