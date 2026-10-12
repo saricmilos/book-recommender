@@ -4,7 +4,8 @@ For each of the 2,405 books, the ten books v2 recommends to a reader of that one
 stage 3 blend, at the settings its report chose, trained on all interactions), and the ten
 v1's API returns for it (its own table, v1/models/topk_item_sim.npz), plus each book's title,
 author, year, cover and a short description. Written as JSON into the site's
-src/content/book-recommender/, which the page loads on demand.
+src/content/book-recommender/, which the page loads on demand. Also the page's table of results
+and the numbers behind its "What the data showed" (findings.py).
 
 Two display rules, not model changes: a list shows one edition of a book (same_book_keys),
 and v2 never recommends Wild Animus (never_recommended says why); the evaluation is as the
@@ -24,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from bookrec import openlibrary, text, topn
+from bookrec import findings, openlibrary, text, topn
 from bookrec.books import author_key, book_rows, clean_split, clean_title, title_key
 from bookrec.data import load_split
 from bookrec.interactions import load_interactions
@@ -207,6 +208,7 @@ def export(out: Path = OUT) -> dict:
         "similar.json": similar,
         "descriptions.json": descriptions,
         "results.json": results(),
+        "findings.json": named_findings(findings.findings(data), books),
     }
     for name, content in files.items():
         (out / name).write_text(json.dumps(content, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
@@ -231,6 +233,26 @@ def results() -> dict:
             {"label": "Stage 3: EASE, all interactions", **keep(pick(rows3, "EASE"))},
             {"label": "v2: blend of EASE, RP3beta and text", **keep(pick(rows3, "Blend: EASE + RP3beta + text"))},
         ],
+    }
+
+
+def named_findings(found: dict, books: list[list]) -> dict:
+    """findings.findings() with each book's title and author as the demo shows them (books:
+    books.json's rows, by book ID)."""
+    title = lambda i: books[i][0]  # noqa: E731
+    author = lambda i: books[i][1]  # noqa: E731
+    examples = found["titles"]["examples"]
+    return {
+        **found,
+        "most_read": [{**x, "title": title(x["book"]), "author": author(x["book"])} for x in found["most_read"]],
+        "titles": {
+            **found["titles"],
+            "examples": {
+                "merged": {**examples["merged"], "author": author(examples["merged"]["book"])},
+                "split": {**examples["split"], "authors": [author(i) for i in examples["split"]["books"]]},
+                "escaped": {**examples["escaped"], "title": title(examples["escaped"]["book"])},
+            },
+        },
     }
 
 

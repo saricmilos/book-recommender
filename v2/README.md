@@ -11,7 +11,7 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 107 tests, under 3 minutes, v1's re-run included
+pytest                          # 118 tests, about 4 minutes, v1's re-run included
 python -m bookrec.evaluate      # about 12 minutes: writes the reports in reports/ and data/books.csv
 python -m bookrec.export        # about 2 minutes: writes the demo's data into the site
 ```
@@ -124,6 +124,13 @@ Two rules shape what the demo shows, and neither changes the model or its scores
   a typical 7.7) say who received a copy, not who chose it, and it would top every list. The
   rule, more than 1,000 readers and a mean rating below 5, picks no other book.
 
+The page also shows what the data showed: four findings, each with what it changed in v2 (most
+interactions are a 0, most editions have one reader, Wild Animus, a title isn't a book).
+`bookrec/findings.py` works out their numbers from `datasets/` and the reports, and the export
+writes them into the site as `findings.json`, so no number on the page is typed by hand. Its
+examples of stage 2 ("Bel Canto", "Lightning", "Angels &amp; Demons") are checked against
+`data/books.csv` on every export.
+
 ## Code
 
 - `bookrec/data.py`: the shared split, produced by v1's own functions (v1 is imported, never changed).
@@ -134,6 +141,7 @@ Two rules shape what the demo shows, and neither changes the model or its scores
 - `bookrec/text.py`: the text model.
 - `bookrec/stage3.py`: the extra-data comparison, the tuning, the blend, and the stage 3 report.
 - `bookrec/export.py`: the demo's data, written into saricmilos.com.
+- `bookrec/findings.py`: the numbers behind the page's "What the data showed".
 - `bookrec/metrics.py`: rating errors and top-10 metrics.
 - `bookrec/models.py`: baselines, v1 as shipped, v1 corrected, and the similarity tables.
 - `bookrec/evaluate.py`: runs everything and writes the report.
