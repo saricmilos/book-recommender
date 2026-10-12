@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bookrec.metrics import mae, ranking_metrics, relevant_items, rmse, tied_at_k, top_k
+from bookrec.metrics import mae, ranking_metrics, recall_among, relevant_items, rmse, tied_at_k, top_k
 
 
 def test_mae_and_rmse():
@@ -49,6 +49,14 @@ def test_ranking_metrics_worked_by_hand():
     assert m["coverage"] == pytest.approx(4 / 5)  # books 0, 1, 3, 4 were shown
     assert m["mean_popularity"] == pytest.approx(30.0)  # (20+40)/2 and (50+10)/2
     assert m["users"] == 2
+
+
+def test_recall_among_counts_only_the_given_books():
+    scores = np.array([[5.0, 4.0, 3.0, 2.0, 1.0]])
+    relevant = {0: {0, 3, 4}}
+    # Top 2 = books 0 and 1. Among books {3, 4} nothing is found; among {0, 4} one of two.
+    assert recall_among(scores, [np.array([], dtype=int)], relevant, {3, 4}, k=2) == 0.0
+    assert recall_among(scores, [np.array([], dtype=int)], relevant, {0, 4}, k=2) == 0.5
 
 
 def test_a_perfect_ranking_scores_one():

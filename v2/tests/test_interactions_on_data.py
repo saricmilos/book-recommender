@@ -1,6 +1,7 @@
 """Stage 3's training-data rule on the real data. The counts are the reviewed ones: if the
 rule or stage 2's books change, they change, and the stage 3 report must be regenerated."""
 
+import numpy as np
 import pytest
 
 from bookrec.interactions import load_interactions, validation_split
@@ -52,6 +53,21 @@ def test_the_validation_set_comes_from_training_and_leaves_it(data):
     assert len(tuning.train) == len(data.train) - len(validation)
     assert validation["user_idx"].nunique() == data.n_benchmark_users  # everyone has at least one
     assert 0.19 < len(validation) / len(data.split.train) < 0.22
+
+
+def test_text_similarity_compares_every_book_with_every_other(data):
+    from bookrec.text import text_similarity
+
+    sim = text_similarity()
+    assert sim.shape == (data.n_items, data.n_items)
+    assert np.allclose(sim, sim.T) and (np.diag(sim) == 0).all()
+    assert sim.min() >= 0 and sim.max() <= 1 + 1e-9
+    # The two Harry Potter books of the benchmark are nearer each other than to 1984.
+    titles = list(data.split.titles)
+    hp = [i for i, t in enumerate(titles) if t.startswith("Harry Potter and the Chamber")][0]
+    hp2 = [i for i, t in enumerate(titles) if t.startswith("Harry Potter and the Prisoner")][0]
+    orwell = titles.index("1984")
+    assert sim[hp, hp2] > sim[hp, orwell]
 
 
 def test_the_four_data_settings_nest(data):

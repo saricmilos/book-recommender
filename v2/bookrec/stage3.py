@@ -4,6 +4,7 @@
    benchmark's ratings alone to every interaction, all scored on the same held-out ratings.
 2. Each model's settings chosen on a validation set carved out of training (never the
    held-out ratings), then the chosen model trained on everything and scored once.
+3. A blend of EASE, RP3beta and the text model, its weights chosen on the same validation set.
 """
 
 from __future__ import annotations
@@ -12,9 +13,9 @@ from collections.abc import Callable
 
 import numpy as np
 
-from bookrec import topn
+from bookrec import text, topn
 from bookrec.interactions import Interactions, benchmark_only, load_interactions, validation_split
-from bookrec.metrics import ranking_metrics, relevant_items
+from bookrec.metrics import ranking_metrics, recall_among, relevant_items
 
 K = 10
 RELEVANT_FROM = 4
@@ -41,7 +42,19 @@ GRIDS = {
         for k in (50, 200, 500)
     ],
     "EASE": [{"lam": lam} for lam in (10.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0)],
+    "Text (TF-IDF)": [{"k": k} for k in (3, 5, 10, 20, 50, 100, 300)],
 }
+
+# The blend: per-user z-scores of EASE, RP3beta (each at its tuned settings) and the text
+# model, added with weights that sum to 1, in steps of 0.1, text at most 0.5.
+BLEND = "Blend: EASE + RP3beta + text"
+BLEND_TEXT_K = (5, 10, 20, 50)
+BLEND_WEIGHTS = [
+    {"ease": a / 10, "rp3beta": (10 - a - c) / 10, "text": c / 10}
+    for a in range(0, 11)
+    for c in range(0, 6)
+    if a + c <= 10
+]
 
 
 class Scorer:
@@ -77,7 +90,29 @@ class Scorer:
             return topn.rp3beta(d, a, params["beta"], params["k"], walk=self._walks[a])
         if model == "EASE":
             return topn.ease(d, params["lam"], counts=self.counts)
+        if model == "Text (TF-IDF)":
+            return text.text_knn(d, params["k"])
         raise KeyError(model)
+
+    def blend_parts(self, settings: dict[str, dict], text_ks: tuple[int, ...]) -> dict[str, np.ndarray]:
+        """Per-user z-scores of EASE and RP3beta at their tuned settings, and of the text model
+        for each k in text_ks."""
+        train_items = self.data.train_items()
+        parts = {
+            "ease": topn.standardise(self("EASE", settings["EASE"]), train_items),
+            "rp3beta": topn.standardise(self("RP3beta", settings["RP3beta"]), train_items),
+        }
+        for k in text_ks:
+            parts[f"text {k}"] = topn.standardise(self("Text (TF-IDF)", {"k": k}), train_items)
+        return parts
+
+
+def blend(parts: dict[str, np.ndarray], params: dict) -> np.ndarray:
+    return (
+        params["ease"] * parts["ease"]
+        + params["rp3beta"] * parts["rp3beta"]
+        + params["text"] * parts[f"text {params['text_k']}"]
+    )
 
 
 def data_settings(data: Interactions) -> dict[str, Interactions]:
@@ -122,23 +157,46 @@ def run_stage3(progress: Callable[[str], None] = lambda s: None) -> dict:
     validation_relevant = relevant_items(validation, RELEVANT_FROM)
     tune = Scorer(tuning_data)
     final = Scorer(data)
-    tuned = []
+    # The less popular half of the books, by training interactions: where text should help.
+    counts = data.popularity()
+    less_popular = set(np.flatnonzero(counts < np.median(counts)).tolist())
+    train_items = data.train_items()
+
+    def scored(scores: np.ndarray) -> dict:
+        m = _metrics(scores, data, test_relevant, popularity)
+        return {**m, "less_popular_recall": recall_among(scores, train_items, test_relevant, less_popular, K)}
+
+    def trial(scores: np.ndarray, params: dict) -> dict:
+        m = _metrics(scores, tuning_data, validation_relevant, popularity)
+        return {"params": params, "ndcg": m["ndcg"], "hit_rate": m["hit_rate"], "coverage": m["coverage"]}
+
+    tuned = [{"model": "Most popular", "params": {}, "validation_ndcg": None, "trials": [], **scored(final("Most popular", {}))}]
     for model, grid in GRIDS.items():
         progress(f"part 2: tuning {model}")
-        trials = []
-        for params in grid:
-            m = _metrics(tune(model, params), tuning_data, validation_relevant, popularity)
-            trials.append({"params": params, "ndcg": m["ndcg"], "hit_rate": m["hit_rate"], "coverage": m["coverage"]})
+        trials = [trial(tune(model, params), params) for params in grid]
         best = max(trials, key=lambda x: x[PRIMARY])  # the first of equals: the grid's order
-        m = _metrics(final(model, best["params"]), data, test_relevant, popularity)
-        tuned.append({"model": model, "params": best["params"], "validation_ndcg": best["ndcg"], "trials": trials, **m})
-    popular = _metrics(final("Most popular", {}), data, test_relevant, popularity)
-    tuned.insert(0, {"model": "Most popular", "params": {}, "validation_ndcg": None, "trials": [], **popular})
+        tuned.append(
+            {"model": model, "params": best["params"], "validation_ndcg": best["ndcg"], "trials": trials,
+             **scored(final(model, best["params"]))}
+        )
+
+    # Part 3: the blend, its weights chosen on the validation set.
+    progress("part 3: blending")
+    settings = {x["model"]: x["params"] for x in tuned}
+    parts = tune.blend_parts(settings, BLEND_TEXT_K)
+    trials = [trial(blend(parts, {**w, "text_k": k}), {**w, "text_k": k}) for k in BLEND_TEXT_K for w in BLEND_WEIGHTS]
+    best = max(trials, key=lambda x: x[PRIMARY])
+    final_parts = final.blend_parts(settings, (best["params"]["text_k"],))
+    tuned.append(
+        {"model": BLEND, "params": best["params"], "validation_ndcg": best["ndcg"], "trials": trials,
+         **scored(blend(final_parts, best["params"]))}
+    )
 
     return {
         "counts": data.counts,
         "users_scored": len(test_relevant),
         "validation": {"ratings": len(validation), "users": len(validation_relevant)},
+        "less_popular": {"books": len(less_popular), "below": float(np.median(counts))},
         "extra_data": extra_data,
         "tuned": tuned,
     }
@@ -153,7 +211,8 @@ def _table(header: list[str], rows: list[list[str]]) -> str:
 
 
 def _settings(params: dict) -> str:
-    names = {"k": "k", "shrink": "shrink", "alpha": "α", "beta": "β", "lam": "λ", "cosine": "cosine"}
+    names = {"k": "k", "shrink": "shrink", "alpha": "α", "beta": "β", "lam": "λ", "cosine": "cosine",
+             "ease": "EASE", "rp3beta": "RP3beta", "text": "text", "text_k": "text k"}
     return ", ".join(f"{names[k]} = {v:g}" if isinstance(v, float) else f"{names[k]} = {v}" for k, v in params.items()) or "none"
 
 
@@ -181,7 +240,8 @@ def render_stage3(r: dict, stage2: dict, versions: str) -> str:
     best_stage2 = max(stage2["ranking"]["rows"], key=lambda x: x["ndcg"])
     top_hit_stage2 = max(stage2["ranking"]["rows"], key=lambda x: x["hit_rate"])
     tuned = _table(
-        ["Model", "Settings chosen", "Validation NDCG@10", "Precision@10", "Recall@10", "NDCG@10", "Hit rate", "Coverage", "Avg. popularity"],
+        ["Model", "Settings chosen", "Validation NDCG@10", "Precision@10", "Recall@10", "NDCG@10", "Hit rate",
+         "Recall, less popular half", "Coverage", "Avg. popularity"],
         [
             [
                 x["model"],
@@ -191,23 +251,32 @@ def render_stage3(r: dict, stage2: dict, versions: str) -> str:
                 f"{x['recall']:.4f}",
                 f"**{x['ndcg']:.4f}**",
                 f"{x['hit_rate']:.1%}",
+                f"{x['less_popular_recall']:.1%}",
                 f"{x['coverage']:.1%}",
                 f"{x['mean_popularity']:.1f}",
             ]
             for x in r["tuned"]
         ],
     )
+
+    def trial_rows(x: dict) -> list[dict]:
+        if x["model"] == BLEND:  # 200-odd weightings: the best 15
+            return sorted(x["trials"], key=lambda t: -t["ndcg"])[:15]
+        return x["trials"]
+
     trials = "\n\n".join(
-        f"<details><summary>{x['model']}: {len(x['trials'])} settings tried</summary>\n\n"
+        f"<details><summary>{x['model']}: {len(x['trials'])} settings tried"
+        + (", the best 15 shown" if x["model"] == BLEND else "")
+        + "</summary>\n\n"
         + _table(
             ["Settings", "Validation NDCG@10", "Validation hit rate", "Coverage"],
-            [[_settings(t["params"]), f"{t['ndcg']:.4f}", f"{t['hit_rate']:.1%}", f"{t['coverage']:.1%}"] for t in x["trials"]],
+            [[_settings(t["params"]), f"{t['ndcg']:.4f}", f"{t['hit_rate']:.1%}", f"{t['coverage']:.1%}"] for t in trial_rows(x)],
         )
         + "\n\n</details>"
         for x in r["tuned"]
         if x["trials"]
     )
-    v = r["validation"]
+    v, lp = r["validation"], r["less_popular"]
     return f"""# Stage 3: models
 
 Generated by `python -m bookrec.evaluate`; edit the code, not this file.
@@ -259,6 +328,17 @@ model was trained on all interactions and scored once. Stage 2's best were NDCG@
 {best_stage2['ndcg']:.4f} ({best_stage2['model']}) and a hit rate of {top_hit_stage2['hit_rate']:.1%} ({top_hit_stage2['model']}).
 
 {tuned}
+
+"Recall, less popular half" is the share of the held-out ratings of 4 or more for the
+{lp['books']:,} books with fewer than {lp['below']:g} training interactions that made the user's top 10:
+how well a model finds the books collaborative data knows least about.
+
+The text model (`bookrec/text.py`) compares books by the words of their title, author and
+Open Library subjects and description, weighted by TF-IDF; it learns nothing from who reads
+what, beyond the user's own books. The blend turns each user's scores from EASE, RP3beta (at
+their tuned settings) and the text model into z-scores over the books the user could be
+recommended, and adds them with weights that sum to 1, in steps of 0.1 with text at most 0.5,
+for text k of {', '.join(str(k) for k in BLEND_TEXT_K)}; the weights too were chosen on the validation set.
 
 ## How the settings were chosen
 

@@ -104,6 +104,18 @@ def rp3beta(data: Interactions, alpha: float = 1.0, beta: float = 0.5, k: int = 
     return (_benchmark_rows(data) @ _keep_top_k(w, k)).astype(float)
 
 
+def standardise(scores: np.ndarray, train_items: list[np.ndarray]) -> np.ndarray:
+    """Each user's scores as z-scores over the books they could be recommended, so that models
+    on different scales can be blended; training books get 0 (they are left out anyway)."""
+    s = np.array(scores, dtype=float)
+    for u, items in enumerate(train_items):
+        s[u, items] = np.nan
+    mean = np.nanmean(s, axis=1, keepdims=True)
+    sd = np.nanstd(s, axis=1, keepdims=True)
+    sd[sd == 0] = 1
+    return np.nan_to_num((s - mean) / sd, nan=0.0)
+
+
 def ease(data: Interactions, lam: float = 500.0, counts: np.ndarray | None = None) -> np.ndarray:
     g = (co_occurrence(data) if counts is None else counts).astype(float)
     g[np.diag_indices_from(g)] += lam

@@ -42,6 +42,20 @@ def tied_at_k(scores: np.ndarray, train_items: list[np.ndarray], users, k: int) 
     return tied
 
 
+def recall_among(
+    scores: np.ndarray, train_items: list[np.ndarray], relevant: dict[int, set[int]], books: set[int], k: int = 10
+) -> float:
+    """Of the relevant held-out ratings whose book is in `books`, the share that made the
+    user's top k: how well a model finds, say, the less popular books."""
+    found = total = 0
+    for user, rel in relevant.items():
+        wanted = rel & books
+        if wanted:
+            total += len(wanted)
+            found += len(wanted & set(top_k(scores[user], train_items[user], k).tolist()))
+    return found / total if total else 0.0
+
+
 def relevant_items(test: pd.DataFrame, threshold: float) -> dict[int, set[int]]:
     """Held-out books each user rated at least `threshold`; users with none are left out."""
     liked = test[test["book_rating"] >= threshold]

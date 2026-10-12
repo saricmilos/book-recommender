@@ -59,6 +59,22 @@ def test_rp3beta_beta_turns_scores_away_from_popular_books():
     assert ratio(penalised) < ratio(plain)
 
 
+def test_standardise_z_scores_the_books_a_user_could_get_and_zeroes_the_rest():
+    z = topn.standardise(np.array([[10.0, 1.0, 2.0, 3.0]]), [np.array([0])])
+    assert z[0, 0] == 0  # a training book
+    assert z[0, 1:].mean() == pytest.approx(0) and z[0, 1:].std() == pytest.approx(1)
+    assert topn.standardise(np.array([[5.0, 5.0]]), [np.array([], dtype=int)]).tolist() == [[0.0, 0.0]]
+
+
+def test_blend_adds_the_weighted_parts():
+    from bookrec.stage3 import BLEND_WEIGHTS, blend
+
+    parts = {"ease": np.array([[1.0]]), "rp3beta": np.array([[2.0]]), "text 5": np.array([[4.0]])}
+    assert blend(parts, {"ease": 0.5, "rp3beta": 0.3, "text": 0.2, "text_k": 5})[0, 0] == pytest.approx(0.5 + 0.6 + 0.8)
+    assert all(abs(sum(w.values()) - 1) < 1e-9 and w["text"] <= 0.5 for w in BLEND_WEIGHTS)
+    assert {"ease": 1.0, "rp3beta": 0.0, "text": 0.0} in BLEND_WEIGHTS  # EASE alone is among the choices
+
+
 def test_ease_ranks_the_constant_companion_first_and_shrinks_with_lambda():
     data = toy([(0, 0)] + PAIRS[2:], 8, 4)
     small, large = topn.ease(data, lam=0.5), topn.ease(data, lam=1e6)
