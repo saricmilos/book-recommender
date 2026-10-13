@@ -5,7 +5,7 @@ One book recommender in two versions, on the Book-Crossing ratings in `datasets/
 | Folder | What it is | Rule |
 |---|---|---|
 | `v1/` | The version Miloš built by hand, November 2025 to early 2026: EDA, user- and item-based CF, content-based filtering, the FastAPI app, the report. | Frozen. Never edit, move, reformat or fix anything under `v1/`, not even a typo or a broken path. |
-| `v2/` | The version built with Claude Code, from October 2026. | All new work goes here. |
+| `v2/` | The version built from October 2026. | All new work goes here. |
 | `datasets/` | `Books.csv`, `Ratings.csv`, `Users.csv`, shared by both versions. | Read-only. |
 
 Tag `v1.0` is v1 in its original layout, before it moved into `v1/`. A problem found in v1 is
