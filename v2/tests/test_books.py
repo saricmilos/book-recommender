@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from bookrec.books import assign_books, author_key, clean_split, clean_title, same_author, title_key
+from bookrec.books import assign_books, author_key, clean_split, clean_title, main_title_key, same_author, title_key
 
 from conftest import toy_split
 
@@ -37,6 +37,30 @@ def test_clean_title_decodes_html_and_repairs_garbled_accents():
     assert clean_title("Angels &amp; Demons") == "Angels & Demons"
     assert clean_title("Le Petit Prince par Saint-ExupÃ©ry") == "Le Petit Prince par Saint-Exupéry"
     assert clean_title("Saint-Exupéry") == "Saint-Exupéry"  # already right, left alone
+
+
+def test_clean_title_puts_back_quotes_the_csv_mangled_and_drops_a_sellers_tag():
+    assert clean_title('A Child Called \\It\\": One Child\'s Courage to Survive"') == 'A Child Called "It": One Child\'s Courage to Survive'
+    assert clean_title('\\O\\" Is for Outlaw"') == '"O" Is for Outlaw'
+    assert clean_title("Scarlett: The Sequel to Margaret Mitchell's \\Gone With the Wind\\\"\"") == (
+        'Scarlett: The Sequel to Margaret Mitchell\'s "Gone With the Wind"'
+    )
+    assert clean_title("The Pilot's Wife : A Novel Tag: Author of the Weight of Water (Oprah's Book Club (Hardcover))") == (
+        "The Pilot's Wife : A Novel (Oprah's Book Club (Hardcover))"
+    )
+
+
+@pytest.mark.parametrize(
+    "title, main",
+    [
+        ("The Hobbit: or There and Back Again", "hobbit"),
+        ("Memnoch the Devil (Vampire Chronicles, No 5)", "memnoch the devil"),
+        ("Into Thin Air : A Personal Account of the Mt. Everest Disaster", "into thin air"),
+        ("Dr. Atkins' New Diet Revolution", "doctor atkins new diet revolution"),
+    ],
+)
+def test_main_title_key(title, main):
+    assert main_title_key(title) == main
 
 
 @pytest.mark.parametrize(
@@ -91,6 +115,34 @@ def test_a_small_second_author_stays_with_the_main_book():
 def test_held_out_ratings_never_decide_a_split():
     rows = _rows(*[("Mortal Fear", "Greg Iles", "train")] * 5, *[("Mortal Fear", "Robin Cook", "test")] * 9)
     assert set(assign_books(rows)) == {"mortal fear | iles"}
+
+
+def _rated_editions(*entries):
+    """(title, author, part, isbn) entries, one rating each."""
+    return pd.DataFrame(entries, columns=["book_title", "book_author", "part", "isbn"])
+
+
+def test_books_that_are_one_open_library_work_are_joined_under_the_shortest_title():
+    rows = _rated_editions(
+        ("The Hobbit", "J. R. R. Tolkien", "train", "a"),
+        ("The Hobbit: or There and Back Again", "J.R.R. Tolkien", "train", "b"),
+        ("The Hobbit: The Enchanting Prelude to The Lord of the Rings", "J.R.R. TOLKIEN", "train", "c"),
+        ("Dilbert: A Book of Postcards", "Scott Adams", "train", "d"),
+        ("Dilbert: Seven Years of Highly Defective People", "Scott Adams", "train", "e"),
+    )
+    works = {"a": "/works/HOBBIT", "b": "/works/HOBBIT", "c": "/works/HOBBIT", "d": "/works/D1", "e": "/works/D2"}
+    keys = assign_books(rows, works)
+    assert set(keys[:3]) == {"hobbit | tolkien"}
+    assert keys.nunique() == 3  # the two Dilbert books share a main title, not a work
+
+
+def test_only_training_editions_join_books():
+    rows = _rated_editions(
+        ("Seabiscuit", "Laura Hillenbrand", "train", "a"),
+        ("Seabiscuit: An American Legend", "Laura Hillenbrand", "test", "b"),
+        ("Seabiscuit: An American Legend", "Laura Hillenbrand", "train", "c"),
+    )
+    assert assign_books(rows, {"a": "/works/S", "b": "/works/S", "c": "/works/OTHER"}).nunique() == 2
 
 
 def test_clean_split_merges_editions_averages_repeats_and_drops_books_already_read():

@@ -17,14 +17,15 @@ def test_counts_are_the_reviewed_ones(cleaned):
     split, books, changes = cleaned
     assert changes == {
         "v1_titles": 2_508,
-        "books": 2_405,
+        "books": 2_366,
         "titles_with_html_codes": 27,
-        "books_merging_several_v1_titles": 173,
+        "books_merging_several_v1_titles": 196,
+        "books_joined_by_open_library_work": 29,
         "v1_titles_split_by_author": 75,
-        "repeat_ratings_averaged": 478,
-        "held_out_dropped_as_already_read": 253,
+        "repeat_ratings_averaged": 586,
+        "held_out_dropped_as_already_read": 282,
     }
-    assert (len(split.train), len(split.test)) == (45_145, 11_091)
+    assert (len(split.train), len(split.test)) == (45_047, 11_052)
 
 
 def test_every_book_has_training_ratings_and_no_user_holds_out_a_book_they_trained_on(cleaned):
@@ -50,3 +51,14 @@ def test_known_splits_and_merges(cleaned):
     assert len(by_title["Thinner"]) == 1  # Stephen King and Richard Bachman are one author
     bel_canto = books[books["title"].str.startswith("Bel Canto")]
     assert len(bel_canto) == 1 and "Bel Canto: A Novel" in bel_canto["v1_titles"].iloc[0]
+
+
+def test_books_open_library_files_as_one_work_are_one(cleaned):
+    _, books, _ = cleaned
+    hobbit = books[books["title"].str.startswith("The Hobbit")]
+    assert len(hobbit) == 1 and hobbit["title"].iloc[0] == "The Hobbit"
+    assert {"The Hobbit: or There and Back Again", "The Hobbit : The Enchanting Prelude to The Lord of the Rings"} <= set(
+        hobbit["v1_titles"].iloc[0].split(" | ")
+    )
+    assert len(books[books["title"].str.startswith("Harry Potter and the Sorcerer's Stone")]) == 1
+    assert len(books[books["title"].str.startswith("Dilbert: ")]) == 2  # one main title, two works

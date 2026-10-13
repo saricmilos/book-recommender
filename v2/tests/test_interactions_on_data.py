@@ -15,17 +15,17 @@ def data():
 
 def test_counts_are_the_reviewed_ones(data):
     assert data.counts == {
-        "editions": 8_885,
+        "editions": 8_884,
         "editions_in_benchmark": 5_160,
-        "benchmark_training_ratings": 45_145,
-        "extra_benchmark_users_rated": 2_893,
-        "extra_benchmark_users_unrated": 94_680,
-        "extra_other_users_rated": 61_981,
-        "extra_other_users_unrated": 75_970,
-        "other_users": 45_964,
-        "left_out_as_held_out": 11_091,
-        "held_out_ratings": 11_091,
-        "training_interactions": 280_669,
+        "benchmark_training_ratings": 45_047,
+        "extra_benchmark_users_rated": 2_870,
+        "extra_benchmark_users_unrated": 94_449,
+        "extra_other_users_rated": 61_950,
+        "extra_other_users_unrated": 75_889,
+        "other_users": 45_960,
+        "left_out_as_held_out": 11_052,
+        "held_out_ratings": 11_052,
+        "training_interactions": 280_205,
     }
 
 

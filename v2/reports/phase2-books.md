@@ -21,6 +21,16 @@ Koontz), and HTML codes stayed in titles (`Angels &amp; Demons`).
   are usually a publisher or editor in the author field ("Golden Books" for *Jurassic Park*)
   and stay with the main book. Only training ratings decide, so the held-out ratings never
   shape the books.
+- Books with the same main title and author are then one book when Open Library files an
+  edition of each under the same work ([`data/isbn_works.csv`](../data/isbn_works.csv)). This
+  joins 29 books' titles, among them *The Hobbit*'s three ("The Hobbit: or There and
+  Back Again", "The Hobbit: The Enchanting Prelude to The Lord of the Rings"), *Harry Potter
+  and the Sorcerer's Stone* with and without "(Book 1)", and *Pride and Prejudice* with "(The
+  Penguin English Library, El 72)". Books that only share a main title, such as two *Dilbert*
+  collections, stay apart.
+- Titles have their HTML codes decoded, accents garbled by a wrong encoding repaired, quotes
+  that Books.csv escaped with a backslash put back (`\Surely You're Joking, Mr. Feynman!\"`),
+  and a bookseller's "Tag: Author of ..." dropped.
 - A user's ratings of the same book are averaged, and a held-out rating of a book the user
   also rated in training is dropped: no recommender would suggest a book the user has read.
 
@@ -34,49 +44,50 @@ and ISBNs it merges.
 | | |
 |---|---|
 | v1's books (distinct titles) | 2,508 |
-| Books now | 2,405 |
-| Books that merge two or more v1 titles | 173 |
+| Books now | 2,366 |
+| Books that merge two or more v1 titles | 196 |
+| of which joined because Open Library files them as one work | 29 |
 | v1 titles split between different authors' books | 75 |
 | Titles with HTML codes, decoded | 27 |
-| Repeat ratings of one book by one user, averaged | 478 |
-| Held-out ratings dropped as already read in training | 253 |
-| Training / held-out ratings now | 45,145 / 11,091 |
+| Repeat ratings of one book by one user, averaged | 586 |
+| Held-out ratings dropped as already read in training | 282 |
+| Training / held-out ratings now | 45,047 / 11,052 |
 
 The users and the train/held-out halves are v1's, so the numbers below compare directly with
 [stage 1](phase1-evaluation.md).
 
 ## Recommending 10 books: stage 1 → stage 2
 
-The held-out set is 284 ratings smaller: 253 were of a book the user had
-already rated in training, which no model could recommend, and 31 were repeats, now
+The held-out set is 323 ratings smaller: 282 were of a book the user had
+already rated in training, which no model could recommend, and 41 were repeats, now
 averaged. Dropping ratings no model could hit leaves the hits unchanged, so hit rate and
 precision compare directly (the same 2,271 users are scored); recall and NDCG, which divide by the number of
 held-out books, rise slightly for every model.
 
 | Model | Hit rate | NDCG@10 | Coverage | Avg. popularity |
 |---|---|---|---|---|
-| Random | 2.1% → 1.6% | 0.0035 → 0.0023 | 100.0% → 100.0% | 18.0 → 18.6 |
-| Most popular | 14.9% → 16.2% | 0.0298 → 0.0334 | 0.9% → 1.0% | 130.7 → 140.0 |
+| Random | 2.1% → 2.0% | 0.0035 → 0.0031 | 100.0% → 100.0% | 18.0 → 19.0 |
+| Most popular | 14.9% → 16.6% | 0.0298 → 0.0334 | 0.9% → 1.0% | 130.7 → 147.8 |
 | Book mean | 1.4% → 1.3% | 0.0017 → 0.0016 | 0.5% → 0.5% | 9.0 → 9.5 |
-| Bias baseline | 8.2% → 8.3% | 0.0170 → 0.0167 | 1.6% → 1.7% | 84.6 → 84.9 |
-| v1 user-based CF, as shipped | 27.7% → 28.3% | 0.0816 → 0.0874 | 86.1% → 82.0% | 46.9 → 52.9 |
-| v1 user-based CF, corrected | 7.2% → 7.2% | 0.0117 → 0.0123 | 74.0% → 71.6% | 35.5 → 39.6 |
-| v1 item-based CF, as shipped | 15.8% → 16.2% | 0.0341 → 0.0357 | 92.1% → 92.0% | 35.4 → 41.2 |
-| v1 item-based CF, corrected | 4.4% → 7.6% | 0.0061 → 0.0144 | 53.1% → 67.0% | 15.3 → 20.6 |
-| v1 API table: dot product, top 50 | 26.3% → 30.7% | 0.0717 → 0.0878 | 15.8% → 19.3% | 99.3 → 109.2 |
-| Cosine table, top 50 (what v1 measured) | 21.4% → 28.0% | 0.0702 → 0.0917 | 58.1% → 70.2% | 17.7 → 23.2 |
+| Bias baseline | 8.2% → 8.7% | 0.0170 → 0.0179 | 1.6% → 1.6% | 84.6 → 88.2 |
+| v1 user-based CF, as shipped | 27.7% → 28.7% | 0.0816 → 0.0889 | 86.1% → 81.8% | 46.9 → 55.6 |
+| v1 user-based CF, corrected | 7.2% → 7.7% | 0.0117 → 0.0132 | 74.0% → 71.6% | 35.5 → 41.5 |
+| v1 item-based CF, as shipped | 15.8% → 16.5% | 0.0341 → 0.0365 | 92.1% → 92.1% | 35.4 → 42.5 |
+| v1 item-based CF, corrected | 4.4% → 7.8% | 0.0061 → 0.0155 | 53.1% → 67.3% | 15.3 → 21.3 |
+| v1 API table: dot product, top 50 | 26.3% → 29.6% | 0.0717 → 0.0840 | 15.8% → 18.6% | 99.3 → 116.9 |
+| Cosine table, top 50 (what v1 measured) | 21.4% → 28.8% | 0.0702 → 0.0934 | 58.1% → 70.3% | 17.7 → 24.9 |
 
 ## Predicting a rating: stage 1 → stage 2
 
 | Model | MAE | RMSE |
 |---|---|---|
-| Global mean | 1.386 → 1.385 | 1.779 → 1.778 |
-| User mean | 1.180 → 1.181 | 1.572 → 1.572 |
-| Book mean | 1.372 → 1.369 | 1.748 → 1.745 |
-| Bias baseline | 1.171 → 1.170 | 1.530 → 1.529 |
-| v1 user-based CF, as shipped | 7.363 → 7.367 | 7.622 → 7.621 |
-| v1 user-based CF, corrected | 1.315 → 1.256 | 1.851 → 1.677 |
-| v1 item-based CF, as shipped | 5.295 → 5.113 | 6.402 → 6.263 |
+| Global mean | 1.386 → 1.384 | 1.779 → 1.778 |
+| User mean | 1.180 → 1.180 | 1.572 → 1.572 |
+| Book mean | 1.372 → 1.367 | 1.748 → 1.743 |
+| Bias baseline | 1.171 → 1.168 | 1.530 → 1.528 |
+| v1 user-based CF, as shipped | 7.363 → 7.352 | 7.622 → 7.609 |
+| v1 user-based CF, corrected | 1.315 → 1.258 | 1.851 → 1.678 |
+| v1 item-based CF, as shipped | 5.295 → 5.087 | 6.402 → 6.242 |
 | v1 item-based CF, corrected | 1.314 → 1.260 | 1.793 → 1.684 |
 
 ## Stage 2 in full
@@ -91,26 +102,26 @@ The dot-product and cosine tables are rebuilt with v1's method on the cleaned bo
 
 | Model | Precision@10 | Recall@10 | NDCG@10 | Hit rate | Coverage | Avg. popularity |
 |---|---|---|---|---|---|---|
-| Random | 0.0017 | 0.0025 | 0.0023 | 1.6% | 100.0% | 18.6 |
-| Most popular | 0.0181 | 0.0445 | 0.0334 | 16.2% | 1.0% | 140.0 |
-| Book mean | 0.0014 | 0.0024 | 0.0016 | 1.3% | 0.5% | 9.5 |
-| Bias baseline | 0.0103 | 0.0219 | 0.0167 | 8.3% | 1.7% | 84.9 |
-| v1 user-based CF, as shipped | 0.0415 | 0.0915 | 0.0874 | 28.3% | 82.0% | 52.9 |
-| v1 user-based CF, corrected | 0.0079 | 0.0179 | 0.0123 | 7.2% | 71.6% | 39.6 |
-| v1 item-based CF, as shipped | 0.0187 | 0.0482 | 0.0357 | 16.2% | 92.0% | 41.2 |
-| v1 item-based CF, corrected | 0.0085 | 0.0206 | 0.0144 | 7.6% | 67.0% | 20.6 |
-| v1 API table: dot product, top 50 | 0.0423 | 0.1018 | 0.0878 | 30.7% | 19.3% | 109.2 |
-| Cosine table, top 50 (what v1 measured) | 0.0423 | 0.1004 | 0.0917 | 28.0% | 70.2% | 23.2 |
+| Random | 0.0021 | 0.0037 | 0.0031 | 2.0% | 100.0% | 19.0 |
+| Most popular | 0.0185 | 0.0456 | 0.0334 | 16.6% | 1.0% | 147.8 |
+| Book mean | 0.0014 | 0.0025 | 0.0016 | 1.3% | 0.5% | 9.5 |
+| Bias baseline | 0.0107 | 0.0237 | 0.0179 | 8.7% | 1.6% | 88.2 |
+| v1 user-based CF, as shipped | 0.0423 | 0.0939 | 0.0889 | 28.7% | 81.8% | 55.6 |
+| v1 user-based CF, corrected | 0.0085 | 0.0202 | 0.0132 | 7.7% | 71.6% | 41.5 |
+| v1 item-based CF, as shipped | 0.0190 | 0.0500 | 0.0365 | 16.5% | 92.1% | 42.5 |
+| v1 item-based CF, corrected | 0.0089 | 0.0217 | 0.0155 | 7.8% | 67.3% | 21.3 |
+| v1 API table: dot product, top 50 | 0.0408 | 0.0985 | 0.0840 | 29.6% | 18.6% | 116.9 |
+| Cosine table, top 50 (what v1 measured) | 0.0434 | 0.1035 | 0.0934 | 28.8% | 70.3% | 24.9 |
 
 | Model | MAE | RMSE |
 |---|---|---|
-| Global mean | 1.385 | 1.778 |
-| User mean | 1.181 | 1.572 |
-| Book mean | 1.369 | 1.745 |
-| Bias baseline | 1.170 | 1.529 |
-| v1 user-based CF, as shipped | 7.367 | 7.621 |
-| v1 user-based CF, corrected | 1.256 | 1.677 |
-| v1 item-based CF, as shipped | 5.113 | 6.263 |
+| Global mean | 1.384 | 1.778 |
+| User mean | 1.180 | 1.572 |
+| Book mean | 1.367 | 1.743 |
+| Bias baseline | 1.168 | 1.528 |
+| v1 user-based CF, as shipped | 7.352 | 7.609 |
+| v1 user-based CF, corrected | 1.258 | 1.678 |
+| v1 item-based CF, as shipped | 5.087 | 6.242 |
 | v1 item-based CF, corrected | 1.260 | 1.684 |
 
 ## Book details from Open Library
@@ -121,25 +132,27 @@ authors, first year, cover, subjects and description, saved in
 network. A book takes the work most of its ratings' editions belong to, unless another of its
 works has the book's title: an edition filed under an omnibus ("The Anne of Green Gables
 novels [8 novels]") or under a wrong work then gives way. A book none of whose ISBNs Open
-Library knows is searched by title and author, and kept only if both match.
+Library knows is searched by title and author, and kept only if both match. The work of every
+rated edition's ISBN is saved first, in [`data/isbn_works.csv`](../data/isbn_works.csv), for
+the rule above that joins books which are one work.
 
 |  | Books |
 |---|---|
-| Found by an edition's ISBN | 2,405 (100.0%) |
+| Found by an edition's ISBN | 2,366 (100.0%) |
 | Found by a title and author search | 0 (0.0%) |
 | Not found | 0 (0.0%) |
-| With a cover | 2,402 (99.9%) |
-| With a description | 2,092 (87.0%) |
-| With subjects | 2,378 (98.9%) |
+| With a cover | 2,363 (99.9%) |
+| With a description | 2,054 (86.8%) |
+| With subjects | 2,340 (98.9%) |
 
 Three checks, each with its full list:
 
-- For 121 books the work's title doesn't match ours. Mostly that is the
+- For 118 books the work's title doesn't match ours. Mostly that is the
   original-language title ("Le petit prince") or an earlier title of the same book, and the
   work is right; a few are wrong works with no better one among the book's editions ("House
   Harkonnen" under "Dune"), so a description shown for these books should be checked first.
 
-<details><summary>The 121 books</summary>
+<details><summary>The 118 books</summary>
 
 | Book | Author | Open Library's title for its work |
 |---|---|---|
@@ -181,7 +194,6 @@ Three checks, each with its full list:
 | The Gift | DANIELLE STEEL | Le cadeau |
 | The Golden Compass (His Dark Materials, Book 1) | PHILIP PULLMAN | Northern Lights |
 | Gossip Girl #1 : A Novel by Cecily von Ziegesar (Gossip Girl) | Cecily Von Ziegesar | Gossip Girl |
-| Harry Potter and the Sorcerer's Stone (Book 1) | J. K. Rowling | Harry Potter and the Philosopher's Stone |
 | Harry Potter and the Sorcerer's Stone (Harry Potter (Paperback)) | J. K. Rowling | Harry Potter and the Philosopher's Stone |
 | Hocus Pocus | Kurt Vonnegut | Hocus Pocus Or, What's the Hurry, Son? |
 | House Harkonnen (Dune: House Trilogy, Book 2) | Brian Herbert | Dune |
@@ -201,8 +213,7 @@ Three checks, each with its full list:
 | Like Water for Chocolate: A Novel in Monthly Installments With Recipes, Romances and Home Remedies | Laura Esquivel | Como agua para chocolate |
 | The Little Prince | Antoine de Saint-Exupéry | Le petit prince |
 | A Long Fatal Love Chase | Louisa May Alcott | The chase |
-| Love in the Time of Cholera (Penguin Great Books of the 20th Century) | Gabriel Garcia Marquez | El amor en los tiempos del cólera |
-| Love in the Time of Cholera | GABRIEL GARCIA MARQUEZ | El amor en los tiempos del cólera |
+| Love in the Time of Cholera | Gabriel Garcia Marquez | El amor en los tiempos del cólera |
 | The Macgregors: Daniel-Ian | Nora Roberts | Daniel and Ian |
 | The Macgregors: Serena - Caine (The Macgregors) | Nora Roberts | Serena & Caine |
 | Master of the Game | Sidney Sheldon | El Amo Del Juego/Masters of the Game |
@@ -229,7 +240,6 @@ Three checks, each with its full list:
 | Portrait in Sepia : A Novel | Isabel Allende | Retrato en sepia |
 | Prehistory of the Far Side | Gary Larson | The Far Side Gallery 5 |
 | Prodigal Summer: A Novel | Barbara Kingsolver | Prodigal Summer Display |
-| The Professor and the Madman: A Tale of Murder, Insanity, and the Making of The Oxford English Dictionary | Simon Winchester | The Professor and the Madman CD |
 | The Reader | Bernhard Schlink | Der Vorleser |
 | Scientific Progress Goes 'Boink': A Calvin and Hobbes Collection | Bill Watterson | Calvin et Hobbes, tome 9 |
 | See How They Run | James Patterson | The Jericho commandment |

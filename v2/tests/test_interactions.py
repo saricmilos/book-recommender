@@ -23,7 +23,7 @@ def _split():
 
 
 def test_map_editions_by_title_and_author():
-    rows = pd.DataFrame({"isbn": ["A"], "book_key": ["bel canto | patchett"]})
+    rows = pd.DataFrame({"isbn": ["A"], "book_title": ["Bel Canto"], "book_key": ["bel canto | patchett"]})
     catalogue = pd.DataFrame(
         {
             "isbn": ["A", "B", "C", "D", "E"],
@@ -35,7 +35,8 @@ def test_map_editions_by_title_and_author():
 
 
 def test_build_keeps_the_benchmark_adds_the_rest_and_never_trains_on_a_held_out_book():
-    rows = pd.DataFrame({"isbn": ["A", "M1", "M2"], "book_key": ["bel canto | patchett", "mortal fear | cook", "mortal fear | iles"]})
+    rows = pd.DataFrame({"isbn": ["A", "M1", "M2"], "book_title": ["Bel Canto", "Mortal Fear", "Mortal Fear"],
+                         "book_key": ["bel canto | patchett", "mortal fear | cook", "mortal fear | iles"]})
     catalogue = pd.DataFrame({"isbn": ["A", "B", "M1", "M2", "M3"],
                               "title": ["Bel Canto", "Bel Canto: A Novel", "Mortal Fear", "Mortal Fear", "Mortal Fear"],
                               "author": ["Ann Patchett", "Ann Patchett", "Robin Cook", "Greg Iles", "Greg Iles"]})

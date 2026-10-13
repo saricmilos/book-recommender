@@ -1,16 +1,16 @@
 """Stage 3's training data: every Book-Crossing interaction with stage 2's books.
 
-The benchmark stays fixed: v1's 2,272 users, stage 2's 2,405 books and the same held-out
+The benchmark stays fixed: v1's 2,272 users, stage 2's 2,366 books and the same held-out
 ratings. What models may learn from grows, by one rule:
 
-    Training may use any interaction in Book-Crossing with one of the 2,405 books, by any
+    Training may use any interaction in Book-Crossing with one of the 2,366 books, by any
     user, rated (1-10) or not (0: the user had the book but gave no rating), except one that
     covers a user and book whose rating is held out, through any edition of the book.
 
 Editions: an ISBN the benchmark already uses keeps the book stage 2 gave it. Any other ISBN in
-Books.csv belongs to a book when its title has that book's title key and its author loosely
-matches the book's; a title shared by several books goes to the one whose author matches, and
-an edition matching none, or more than one, is left out.
+Books.csv belongs to a book when its title has one of that book's title keys and its author
+loosely matches the book's; a title shared by several books goes to the one whose author
+matches, and an edition matching none, or more than one, is left out.
 """
 
 from __future__ import annotations
@@ -103,13 +103,17 @@ def validation_split(data: Interactions, frac: float = 0.2, seed: int = 7) -> tu
 
 def map_editions(books: pd.DataFrame, rows: pd.DataFrame, catalogue: pd.DataFrame) -> dict[str, int]:
     """ISBN -> item_idx for every edition of stage 2's books (see the module's docstring).
-    books: stage 2's book table; rows: stage 2's rated rows (isbn, book_key); catalogue:
-    Books.csv's isbn, title and author."""
+    books: stage 2's book table; rows: stage 2's rated rows (isbn, book_title, book_key);
+    catalogue: Books.csv's isbn, title and author."""
     item_idx = {k: i for i, k in enumerate(books["book_key"])}
     editions = {isbn: item_idx[key] for isbn, key in zip(rows["isbn"], rows["book_key"])}
+    # A book's title key, and every other title key its rated editions have (a book joined by
+    # its Open Library work has several)
+    titled = {(key.rsplit(" | ", 1)[0], key) for key in books["book_key"]}
+    titled |= set(zip(rows["book_title"].map(title_key), rows["book_key"]))
     by_title: dict[str, list[int]] = {}
-    for i, key in enumerate(books["book_key"]):
-        by_title.setdefault(key.rsplit(" | ", 1)[0], []).append(i)
+    for tkey, key in sorted(titled):
+        by_title.setdefault(tkey, []).append(item_idx[key])
     authors = books["author"].to_numpy()
     new = catalogue[~catalogue["isbn"].isin(editions)]
     keys = new["title"].fillna("").map(title_key)

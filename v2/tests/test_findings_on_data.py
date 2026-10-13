@@ -31,7 +31,7 @@ def test_most_editions_have_one_reader(found):
 
 def test_the_books_gain_readers(found):
     books = found["books"]
-    assert books["count"] == 2_405
+    assert books["count"] == 2_366
     assert books["median_v2_readers"] > 5 * books["median_v1_ratings"]
 
 

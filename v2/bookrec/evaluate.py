@@ -371,6 +371,16 @@ Koontz), and HTML codes stayed in titles (`Angels &amp; Demons`).
   are usually a publisher or editor in the author field ("Golden Books" for *Jurassic Park*)
   and stay with the main book. Only training ratings decide, so the held-out ratings never
   shape the books.
+- Books with the same main title and author are then one book when Open Library files an
+  edition of each under the same work ([`data/isbn_works.csv`](../data/isbn_works.csv)). This
+  joins {c['books_joined_by_open_library_work']:,} books' titles, among them *The Hobbit*'s three ("The Hobbit: or There and
+  Back Again", "The Hobbit: The Enchanting Prelude to The Lord of the Rings"), *Harry Potter
+  and the Sorcerer's Stone* with and without "(Book 1)", and *Pride and Prejudice* with "(The
+  Penguin English Library, El 72)". Books that only share a main title, such as two *Dilbert*
+  collections, stay apart.
+- Titles have their HTML codes decoded, accents garbled by a wrong encoding repaired, quotes
+  that Books.csv escaped with a backslash put back (`\\Surely You're Joking, Mr. Feynman!\\"`),
+  and a bookseller's "Tag: Author of ..." dropped.
 - A user's ratings of the same book are averaged, and a held-out rating of a book the user
   also rated in training is dropped: no recommender would suggest a book the user has read.
 
@@ -386,6 +396,7 @@ and ISBNs it merges.
 | v1's books (distinct titles) | {c['v1_titles']:,} |
 | Books now | {c['books']:,} |
 | Books that merge two or more v1 titles | {c['books_merging_several_v1_titles']:,} |
+| of which joined because Open Library files them as one work | {c['books_joined_by_open_library_work']:,} |
 | v1 titles split between different authors' books | {c['v1_titles_split_by_author']:,} |
 | Titles with HTML codes, decoded | {c['titles_with_html_codes']:,} |
 | Repeat ratings of one book by one user, averaged | {c['repeat_ratings_averaged']:,} |
@@ -459,7 +470,9 @@ authors, first year, cover, subjects and description, saved in
 network. A book takes the work most of its ratings' editions belong to, unless another of its
 works has the book's title: an edition filed under an omnibus ("The Anne of Green Gables
 novels [8 novels]") or under a wrong work then gives way. A book none of whose ISBNs Open
-Library knows is searched by title and author, and kept only if both match.
+Library knows is searched by title and author, and kept only if both match. The work of every
+rated edition's ISBN is saved first, in [`data/isbn_works.csv`](../data/isbn_works.csv), for
+the rule above that joins books which are one work.
 
 {facts}
 

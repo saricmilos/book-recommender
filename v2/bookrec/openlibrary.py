@@ -6,6 +6,10 @@ subjects and description. Every response is cached in data/openlibrary-cache/ (n
 so a stopped fetch resumes; the result is data/book_details.jsonl, which is committed. Later
 stages read that file and never the network.
 
+First, the work of every rated edition's ISBN goes to data/isbn_works.csv (committed), which
+stage 2 reads to join books that are one work (books.join_same_works); the details are then
+fetched for the books as joined.
+
     python -m bookrec.openlibrary        # about 45 minutes the first time, at 1 request/second
 """
 
@@ -25,7 +29,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from bookrec.books import author_key, book_rows, clean_split, same_author, title_key
+from bookrec.books import ISBN_WORKS, author_key, book_rows, clean_split, same_author, title_key
 from bookrec.data import load_split
 from bookrec.paths import DATA
 
@@ -209,9 +213,22 @@ def clean_description(text: object) -> str | None:
     return text or None
 
 
-def details(client: Client, books: pd.DataFrame, isbn_ratings: dict[int, list[tuple[str, int]]]) -> list[dict]:
-    """One record per book (books: book_id index, title, author)."""
-    by_isbn = works_by_isbn(client, (i for pairs in isbn_ratings.values() for i, _ in pairs))
+def write_isbn_works(by_isbn: dict[str, dict], isbns: Iterable[str], path: Path = ISBN_WORKS) -> None:
+    """Each ISBN, as the ratings spell it, with the work Open Library files it under."""
+    pairs = sorted({(isbn, by_isbn[c]["key"]) for isbn in isbns if (c := clean_isbn(isbn)) in by_isbn})
+    pd.DataFrame(pairs, columns=["isbn", "ol_work"]).to_csv(path, index=False, lineterminator="\n")
+
+
+def details(
+    client: Client,
+    books: pd.DataFrame,
+    isbn_ratings: dict[int, list[tuple[str, int]]],
+    by_isbn: dict[str, dict] | None = None,
+) -> list[dict]:
+    """One record per book (books: book_id index, title, author). by_isbn: works_by_isbn's
+    answer for these ISBNs, if already fetched."""
+    if by_isbn is None:
+        by_isbn = works_by_isbn(client, (i for pairs in isbn_ratings.values() for i, _ in pairs))
     records = []
     for book_id, book in books.iterrows():
         doc, others = choose_work(isbn_ratings.get(book_id, []), by_isbn, book["title"], book["author"])
@@ -331,11 +348,15 @@ def isbn_ratings_by_book() -> tuple[pd.DataFrame, dict[int, list[tuple[str, int]
 
 
 def main() -> None:
-    books, pairs = isbn_ratings_by_book()
+    split = load_split()
+    isbns = sorted(set(split.train["isbn"]) | set(split.test["isbn"]))
     client = Client()
-    records = details(client, books, pairs)
+    by_isbn = works_by_isbn(client, isbns)
+    write_isbn_works(by_isbn, isbns)  # before the books: stage 2 reads it
+    books, pairs = isbn_ratings_by_book()
+    records = details(client, books, pairs, by_isbn)
     write_details(records)
-    print(f"Wrote {DETAILS} ({len(records):,} books, {client.requests:,} requests)")
+    print(f"Wrote {ISBN_WORKS} and {DETAILS} ({len(records):,} books, {client.requests:,} requests)")
 
 
 if __name__ == "__main__":

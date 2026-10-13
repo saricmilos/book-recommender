@@ -12,6 +12,12 @@ splits only if the second author has at least MIN_TRAINING_RATINGS_TO_SPLIT trai
 smaller groups stay with the main book, as in v1. Both rules lean towards changing nothing:
 a missed merge or split leaves things as v1 had them, a wrong one would be a new error.
 Only training ratings decide, so the held-out ratings never shape the books.
+
+title_key keeps real subtitles and bracketed numbers, so that "Dune" and "Dune: House
+Atreides" stay apart; that also kept "The Hobbit" and "The Hobbit: or There and Back Again"
+apart. So books with the same main title and author are then joined when Open Library files
+their editions under one work (join_same_works), from the ISBN -> work list that
+`python -m bookrec.openlibrary` saves in data/isbn_works.csv.
 """
 
 from __future__ import annotations
@@ -25,8 +31,10 @@ import numpy as np
 import pandas as pd
 
 from bookrec.data import Split
+from bookrec.paths import DATA
 
 MIN_TRAINING_RATINGS_TO_SPLIT = 3
+ISBN_WORKS = DATA / "isbn_works.csv"
 
 # A subtitle that names the kind of book rather than the book: ": A Novel", ": A Memoir",
 # ": An Alex Delaware Novel". Other subtitles are kept, so "Dune" and "Dune: House Atreides"
@@ -43,6 +51,9 @@ _NAME_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "phd", "md"}
 # married name. Keys and values are as _author_words gives them.
 PEN_NAMES = {"richard bachman": "stephen king", "phyllis white": "p d james"}
 
+# Abbreviations an edition's title may spell out ("Mt. Everest", "Mount Everest")
+SPELLED_OUT = {"mt": "mount", "st": "saint", "dr": "doctor", "mr": "mister"}
+
 
 def _repair(text: str) -> str:
     """Undo UTF-8 that was read as Latin-1 ("Saint-ExupÃ©ry" -> "Saint-Exupéry"); text that
@@ -58,8 +69,16 @@ def _ascii(text: str) -> str:
 
 
 def clean_title(title: str) -> str:
-    """The title to show: HTML codes decoded, garbled accents repaired, spaces tidied."""
-    return re.sub(r"\s+", " ", _repair(html.unescape(str(title)))).strip()
+    """The title to show: HTML codes decoded, garbled accents repaired, quotes the CSV mangled
+    put back, a bookseller's "Tag: Author of ..." dropped, spaces tidied."""
+    t = _repair(html.unescape(str(title)))
+    # Books.csv escapes quotes with a backslash, which the reader doesn't undo:
+    # "A Child Called \"It\": ..." arrives as 'A Child Called \It\": ..."'
+    t = re.sub(r'\\([^\\"]*)\\"', r'"\1"', t)
+    if t.count('"') % 2 and t.endswith('"'):
+        t = t[:-1]
+    t = re.sub(r"\bTag: Author of [^()]*", " ", t)  # "The Pilot's Wife : A Novel Tag: Author of the Weight of Water"
+    return re.sub(r"\s+", " ", t).strip()
 
 
 def _plain(text: str) -> str:
@@ -83,6 +102,21 @@ def title_key(title: str) -> str:
         t = head
     key = _ARTICLE.sub("", _plain(t))
     return f"{key} #{'-'.join(numbers)}" if numbers else key
+
+
+def _without_brackets(title: str) -> str:
+    t = clean_title(title)
+    while (m := re.search(r"\([^()]*\)", t)) is not None:  # innermost first, for nested brackets
+        t = t[: m.start()] + " " + t[m.end() :]
+    return t
+
+
+def main_title_key(title: str) -> str:
+    """The title before any subtitle, without bracketed notes, compared as title_key compares
+    and with abbreviations spelled out: "The Hobbit: or There and Back Again" and "Memnoch the
+    Devil (Vampire Chronicles, No 5)" give "hobbit" and "memnoch the devil"."""
+    key = _ARTICLE.sub("", _plain(_without_brackets(title).partition(":")[0]))
+    return " ".join(SPELLED_OUT.get(w, w) for w in key.split(" "))
 
 
 def _author_words(author: str) -> list[str]:
@@ -114,13 +148,55 @@ def same_author(a: str, b: str) -> bool:
     return min(len(sa), len(sb)) >= 5 and SequenceMatcher(None, sa, sb).ratio() >= 0.8
 
 
-def assign_books(rows: pd.DataFrame) -> pd.Series:
-    """A book key for every row of `rows` (book_title, book_author, and part: "train" or "test").
+def load_isbn_works(path=ISBN_WORKS) -> dict[str, str]:
+    """ISBN -> Open Library work, for the ISBNs Open Library knows, as `python -m
+    bookrec.openlibrary` saved them; empty before it has run."""
+    if not path.exists():
+        return {}
+    works = pd.read_csv(path, dtype=str)
+    return dict(zip(works["isbn"], works["ol_work"]))
+
+
+def join_same_works(rows: pd.DataFrame, keys: pd.Series, works: dict[str, str]) -> pd.Series:
+    """Books (`keys`, one per row) with the same main title and author become one when Open
+    Library files an edition of each under the same work, as it does "The Hobbit", "The Hobbit:
+    or There and Back Again" and "The Hobbit: The Enchanting Prelude to The Lord of the Rings".
+    Books that only share a main title stay apart ("Dilbert: A Book of Postcards" and "Dilbert:
+    Seven Years of Highly Defective People"). Only the editions of training ratings count. A
+    joined book keeps the key of its shortest title."""
+    train = (rows["part"] == "train").to_numpy()
+    book_works: dict[str, set[str]] = {}
+    for key, isbn in zip(keys[train], rows["isbn"][train]):
+        if isbn in works:
+            book_works.setdefault(key, set()).add(works[isbn])
+    main = rows.groupby(keys)["book_title"].agg(lambda s: main_title_key(_most_common(s)))
+    candidates: dict[tuple[str, str], list[str]] = {}
+    for key, title in main.items():
+        candidates.setdefault((title, key.rsplit(" | ", 1)[1]), []).append(key)
+    joined = {}
+    for members in candidates.values():
+        groups: list[tuple[set[str], list[str]]] = []  # (works, keys), joined while they share a work
+        for key in sorted(members):
+            mine = book_works.get(key, set())
+            sharing = [g for g in groups if g[0] & mine]
+            groups = [g for g in groups if not g[0] & mine]
+            groups.append((mine.union(*(g[0] for g in sharing)), [key] + [k for g in sharing for k in g[1]]))
+        for _, group in groups:
+            keep = min(group, key=lambda k: (len(k.rsplit(" | ", 1)[0]), k))
+            joined.update({k: keep for k in group if k != keep})
+    return keys.map(lambda k: joined.get(k, k))
+
+
+def assign_books(rows: pd.DataFrame, works: dict[str, str] | None = None) -> pd.Series:
+    """A book key for every row of `rows` (book_title, book_author, and part: "train" or "test";
+    and isbn, when `works` is given).
 
     Rows are grouped by title_key, which merges editions; within a group, authors that loosely
     match are one author, taken in order of training ratings, most first. The first author's
     group keeps the book; another author's group becomes its own book only with at least
-    MIN_TRAINING_RATINGS_TO_SPLIT training ratings, and otherwise stays with the first.
+    MIN_TRAINING_RATINGS_TO_SPLIT training ratings, and otherwise stays with the first. Given
+    Open Library's works (ISBN -> work), books that are one work are then joined
+    (join_same_works).
     """
     keys = pd.Series(index=rows.index, dtype=object)
     for tkey, group in rows.groupby(rows["book_title"].map(title_key), sort=True):
@@ -142,7 +218,7 @@ def assign_books(rows: pd.DataFrame) -> pd.Series:
             for author in cluster:
                 book_of[author] = f"{tkey} | {author_key(owner)}"
         keys[group.index] = group["book_author"].map(book_of)
-    return keys
+    return join_same_works(rows, keys, works) if works else keys
 
 
 def book_rows(split: Split) -> pd.DataFrame:
@@ -151,12 +227,19 @@ def book_rows(split: Split) -> pd.DataFrame:
     rows = pd.concat(
         [split.train[cols].assign(part="train"), split.test[cols].assign(part="test")], ignore_index=True
     )
-    rows["book_key"] = assign_books(rows)
+    rows["book_key"] = assign_books(rows, load_isbn_works())
     return rows
 
 
 def _most_common(values: pd.Series) -> str:
     return values.value_counts().index[0]
+
+
+def _book_title(titles: pd.Series) -> str:
+    """A book's title: its most common v1 title among those with the shortest title key, so that
+    a book joined by its Open Library work keeps its plain title ("The Hobbit")."""
+    lengths = titles.map(title_key).str.len()
+    return clean_title(_most_common(titles[lengths == lengths.min()]))
 
 
 def clean_split(split: Split) -> tuple[Split, pd.DataFrame, dict]:
@@ -172,7 +255,7 @@ def clean_split(split: Split) -> tuple[Split, pd.DataFrame, dict]:
     books = (
         rows.groupby("book_key")
         .agg(
-            title=("book_title", lambda s: clean_title(_most_common(s))),
+            title=("book_title", _book_title),
             author=("book_author", lambda s: clean_title(_most_common(s))),
             v1_titles=("book_title", lambda s: " | ".join(sorted(set(s)))),
             isbns=("isbn", lambda s: " ".join(sorted(set(s)))),
@@ -202,11 +285,13 @@ def clean_split(split: Split) -> tuple[Split, pd.DataFrame, dict]:
 
     v1_titles_per_book = books["v1_titles"].str.count(r" \| ") + 1
     books_per_v1_title = rows.groupby("book_title")["book_key"].nunique()
+    title_keys_per_book = rows.assign(tkey=rows["book_title"].map(title_key)).groupby("book_key")["tkey"].nunique()
     changes = {
         "v1_titles": int(rows["book_title"].nunique()),
         "books": len(books),
         "titles_with_html_codes": int(sum(html.unescape(t) != t for t in rows["book_title"].unique())),
         "books_merging_several_v1_titles": int((v1_titles_per_book > 1).sum()),
+        "books_joined_by_open_library_work": int((title_keys_per_book > 1).sum()),
         "v1_titles_split_by_author": int((books_per_v1_title > 1).sum()),
         "repeat_ratings_averaged": int(len(rows) - len(train) - len(collapse(frames["test"]))),
         "held_out_dropped_as_already_read": int((~keep).sum()),
