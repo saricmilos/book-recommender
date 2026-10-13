@@ -1,8 +1,7 @@
 # v2
 
-The second version of the book recommender, built with Claude Code from October 2026: I set
-the goals, review every change and check the results. Every number below comes from code in
-this folder, and the tests check that code, including a re-run of v1.
+The second version of the book recommender, built from October 2026. Every number below comes
+from code in this folder, and the tests check that code, including a re-run of v1.
 
 ## Run it
 

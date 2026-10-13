@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bookrec"
 version = "2.0.0.dev0"
-description = "Book recommender v2: evaluation and models, built with Claude Code"
+description = "Book recommender v2: evaluation and models"
 readme = "README.md"
 requires-python = ">=3.11"
 # v1's versions, pinned: phase 1 checks that v1's code still gives v1's published numbers,
