@@ -57,5 +57,5 @@ never a personal email.
 
 ## Commits
 
-A subject line in plain words saying what changed (the history's style), a short body when the
-why isn't obvious, and the `Co-Authored-By` trailer.
+A subject line in plain words saying what changed (the history's style), and a short body when
+the why isn't obvious.
