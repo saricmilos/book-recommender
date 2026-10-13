@@ -1,6 +1,6 @@
 """Stage 4: the data behind the demo on saricmilos.com, which runs with no server.
 
-For each of the 2,405 books, the ten books v2 recommends to a reader of that one book (the
+For each of stage 2's books, the ten books v2 recommends to a reader of that one book (the
 stage 3 blend, at the settings its report chose, trained on all interactions), and the ten
 v1's API returns for it (its own table, v1/models/topk_item_sim.npz), plus each book's title,
 author, year, cover and a short description. Written as JSON into the site's
@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 from bookrec import findings, openlibrary, text, topn
-from bookrec.books import author_key, book_rows, clean_split, clean_title, title_key
+from bookrec.books import SPELLED_OUT, author_key, book_rows, clean_split, clean_title, title_key
 from bookrec.data import load_split
 from bookrec.interactions import load_interactions
 from bookrec.models import v1_api_similarity
@@ -47,6 +47,17 @@ WRONG_WORKS = {
     "Prehistory of the Far Side",  # under "The Far Side Gallery 5"
     "Chobits (Chobits)",  # several volumes under one title in Book-Crossing
     "Dilbert Fugitive From The Cubicle Police",  # under a generic "Dilbert"
+}
+
+# Descriptions left out, found by reading those of the 200 most-read books and of the page's
+# examples: written by a reader with mistakes in them, or about another edition.
+BAD_DESCRIPTIONS = {
+    "A Wrinkle in Time",  # a school report: "It is about Meg And Charles Walence ... It also has a movie!"
+    "The Cat in the Hat",  # the Latin translation's: "Includes a Latin-English glossary"
+    "The Catcher in the Rye",  # "Story of Holden Caufield"
+    "Fast Food Nation: The Dark Side of the All-American Meal",  # "the story of postwar Amerca", "has has"
+    "Tara Road",  # "her husband completetely"
+    "Good in Bed",  # "writes an artilce"
 }
 
 
@@ -81,11 +92,85 @@ def display_title(title: str) -> str:
     return tidy_case(re.sub(r"\s+", " ", t).strip(" :"))
 
 
+# Common short words of English, and of the other languages Open Library's descriptions come in
+# (Spanish, French, German, Italian, Portuguese, Dutch, Czech), leaving out words both share
+# ("in", "is", "a", "die", "do", "no", "son", "non").
+_ENGLISH = set(
+    "the and of to he for his with as her by she at they from this be are have which their one but not has had who"
+    " were it that when into after about would what there its been more him them can".split()
+)
+_OTHER = set(
+    "el los las del una por con para que es su sus como más pero al le les des une est du dans qui pour pas sur au"
+    " par il elle avec ce sa ses der das und ist ein eine zu den von mit sich auf für nicht im dem er sie auch di"
+    " che è della gli nel os da um em não na het een en van dat op te zijn voor niet hij je se že".split()
+)
+
+
+def _votes(text_: str) -> tuple[int, int]:
+    words = re.findall(r"[^\W\d_]+", text_.lower())
+    return sum(w in _ENGLISH for w in words), sum(w in _OTHER for w in words)
+
+
+def is_english(text_: str) -> bool:
+    """Whether a text is in English: more of its words are common English words than common
+    words of the other languages."""
+    english, other = _votes(text_)
+    return english > other
+
+
+def plain_text(text_: str) -> str:
+    """A description's Markdown as plain text: links and emphasis become their words, and what
+    follows a rule or an "Also contained in:" (lists of other books) and "Preceded by:" lines go."""
+    t = re.split(r"\n[ \t]*-{3,}[ \t]*(?:\n|$)", text_.replace("\r\n", "\n").replace("\r", "\n"))[0]
+    t = re.split(r"\n\s*(?:Also contained in|Contains|See also)\s*:", t)[0]
+    t = re.sub(r"^(?:(?:Preceded|Followed) by|Sequel to):.*$|^\s*\(?(?:Main )?Sources?\b.*$", "", t, flags=re.M)
+    t = re.sub(r"\[([^\]]*)\](?:\[\d*\]|\([^)]*\))", r"\1", t)  # [words][1] and [words](url)
+    t = re.sub(r"(\*{1,3}|_{1,3})(?=\S)(.+?)(?<=\S)\1", r"\2", t)  # *words*, **words**, _words_
+    t = re.sub(r"^#+\s*|`|\*{2,}", "", t, flags=re.M)
+    return t.replace("\\*", "*").strip()
+
+
+# A first sentence about the edition rather than the book ("This deluxe trade paperback edition
+# ... features French flaps", "All Random House Large Print editions are published in a
+# 16-point typeface", "PerfectBound e-book exclusive: ...")
+_ABOUT_THE_EDITION = re.compile(
+    r"\b(?:e-?books?|large print|repackaged|typeface|now (?:available )?in (?:paperback|hardcover))\b"
+    r"|^(?:This|These)\b[^.!?]*\beditions?\b",
+    re.I,
+)
+
+
+def _tidy(text_: str) -> str:
+    """Leftovers of the shops the descriptions were copied from: a source's label to start,
+    first sentences about the edition rather than the book, ISBNs, "More..." links, sentences
+    run together ("the law.Michael", "new coversRay"), and a passage given twice."""
+    t = re.sub(r"^(?:LibraryThing|Publisher's summary|From the publisher|From Wikipedia|Product description|Synopsis)\s*:\s*",
+               "", text_, flags=re.I)
+    t = re.sub(r"\s*\(ISBN[^)]*\)|\bMore\.\.\.(?=[a-z])", "", t)
+    t = re.sub(r"\b(new covers|point typeface)\s*(?=[A-Z])", r"\1. ", t)  # "...fantastic new coversRay Atlee is"
+    t = re.sub(r"([a-z][.!?]|[.!?]\))(?=[A-Z](?:[a-z]| [a-z]))|([A-Z]\.)(?=[A-Z][a-z]{2})", r"\1\2 ", t)  # "the law.Michael", "Rose.A family", "D.C.The"
+    sentences = re.split(r"(?<=[.!?])\s+", t)
+    while len(sentences) > 1 and _ABOUT_THE_EDITION.search(sentences[0]):
+        sentences.pop(0)
+    seen: set[str] = set()
+    kept = [s for s in sentences if not (s in seen or seen.add(s))]  # a passage pasted twice, once
+    return " ".join(kept)
+
+
 def short_description(text_: str | None, limit: int = DESCRIPTION_CHARS) -> str | None:
-    """The description's opening sentences, up to about `limit` characters."""
+    """The description's opening sentences, up to about `limit` characters, as plain text and
+    from its English paragraphs only (Open Library's are often in another language, or in
+    English and then another); None if none is English."""
     if not text_:
         return None
-    t = re.sub(r"\s+", " ", html.unescape(text_)).strip()
+    paragraphs = re.split(r"\n\s*\n", html.unescape(plain_text(text_)))
+    whole = is_english(" ".join(paragraphs))
+    # A paragraph with no common word of any language ("Hammond Cross is a man caught in a moral
+    # dilemma.") goes with the description as a whole
+    kept = [p for p in paragraphs if (is_english(p) if any(_votes(p)) else whole)]
+    t = _tidy(re.sub(r"\s+", " ", " ".join(kept)).strip())
+    if not t:
+        return None
     if len(t) <= limit:
         return t
     cut = t[:limit]
@@ -103,19 +188,17 @@ def never_recommended(data) -> set[int]:
     return set(g[(g["readers"] > 1000) & (g["mean_rating"] < 5)].index.tolist())
 
 
-# Abbreviations an edition's title may spell out ("Mt. Everest", "Mount Everest")
-_SPELLED_OUT = {"mt": "mount", "st": "saint", "dr": "doctor", "mr": "mister"}
-
-
 def same_book_keys(records: list[dict]) -> list[str]:
-    """A key per book that two editions stage 2 kept apart share: the title key without its
-    bracketed volume number and with abbreviations spelled out, and the author's surname
+    """A key per book that two editions stage 2 kept apart would share: the title key without
+    its bracketed volume number and with abbreviations spelled out, and the author's surname
     ("Harry Potter and the Sorcerer's Stone" and "... (Book 1)"; "Into Thin Air: ... Mt.
-    Everest Disaster" and "... Mount Everest Disaster"). Lists show one book of each key."""
+    Everest Disaster" and "... Mount Everest Disaster"). Lists show one book of each key. Since
+    stage 2 joins books that are one Open Library work, this catches only editions Open Library
+    doesn't know."""
     keys = []
     for r in records:
         title = re.sub(r" #[0-9-]+$", "", title_key(r["title"]))
-        keys.append(" ".join(_SPELLED_OUT.get(w, w) for w in title.split(" ")) + " | " + author_key(r["author"]))
+        keys.append(" ".join(SPELLED_OUT.get(w, w) for w in title.split(" ")) + " | " + author_key(r["author"]))
     return keys
 
 
@@ -205,7 +288,7 @@ def export(out: Path = OUT) -> dict:
                 int(readers[r["book_id"]]),
             ]
         )
-        d = short_description(r["description"]) if trusted else None
+        d = short_description(r["description"]) if trusted and r["title"] not in BAD_DESCRIPTIONS else None
         if d:
             descriptions[str(r["book_id"])] = d
 
@@ -248,10 +331,17 @@ def list_stats(similar: dict[str, list[list[int]]], titles: list[str]) -> dict:
 
 def results() -> dict:
     """The numbers the page shows, from the reports: every row on the same held-out ratings,
-    with a 95% interval for its hit rate over the users scored."""
+    with a 95% interval for its hit rate over the users scored; and, from stage 1 on v1's own
+    split, what fixing v1's averaging bug does to its user-based model."""
+    stage1 = json.loads((REPORTS / "phase1-evaluation.json").read_text(encoding="utf-8"))
     stage2 = json.loads((REPORTS / "phase2-books.json").read_text(encoding="utf-8"))
     stage3 = json.loads((REPORTS / "phase3-models.json").read_text(encoding="utf-8"))
     pick = lambda rows, name: next(x for x in rows if x["model"] == name)  # noqa: E731
+
+    def user_cf(version: str) -> dict:
+        name = f"v1 user-based CF, {version}"
+        return {"hit_rate": pick(stage1["ranking"]["rows"], name)["hit_rate"], "mae": pick(stage1["rating"], name)["mae"]}
+
     users = stage3["users_scored"]
     keep = lambda x: {  # noqa: E731
         **{k: x[k] for k in ("ndcg", "hit_rate", "coverage", "mean_popularity")},
@@ -261,6 +351,7 @@ def results() -> dict:
     return {
         "users": users,
         "training": stage3["counts"]["training_interactions"],
+        "bug": {"as_shipped": user_cf("as shipped"), "corrected": user_cf("corrected")},
         "rows": [
             {"label": "Most popular books", **keep(pick(rows3, "Most popular"))},
             {"label": "v1 as shipped (user-based CF)", **keep(pick(rows2, "v1 user-based CF, as shipped"))},

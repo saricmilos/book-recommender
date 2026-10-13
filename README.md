@@ -42,19 +42,20 @@ says how to run it and what each stage found.
    top 10, against 14.9% for the most popular books.
 2. Data quality, done ([report](v2/reports/phase2-books.md)): v1 identified a book by its
    exact title, so editions counted as different books and different books with one title as
-   one. Identified properly, v1's 2,508 books are 2,405, and the cosine similarity table v1
-   measured now recommends best (NDCG@10 0.070 → 0.092). Covers, descriptions and subjects
-   come from [Open Library](https://openlibrary.org), fetched once and kept in the repository.
+   one. Identified properly, with Open Library saying which editions are one work, v1's 2,508
+   books are 2,366, and the cosine similarity table v1 measured now recommends best (NDCG@10
+   0.070 → 0.093). Covers, descriptions and subjects come from
+   [Open Library](https://openlibrary.org), fetched once and kept in the repository.
 3. Models, done ([report](v2/reports/phase3-models.md)): training now uses every interaction
-   in Book-Crossing with the 2,405 books, rated or not (62.3% of Book-Crossing's ratings are 0,
+   in Book-Crossing with the 2,366 books, rated or not (62.3% of Book-Crossing's ratings are 0,
    a book seen but not rated), except any that covers a held-out user and book; that is six
    times the data. A blend of EASE, RP3beta and a text model of the book descriptions, tuned
-   on a validation set, reaches NDCG@10 0.173 and a 48.4% hit rate, against 0.092 and 30.7%
-   after stage 2 and 0.087 and 28.3% for v1's user-based model as shipped, on the same
+   on a validation set, reaches NDCG@10 0.172 and a 48.2% hit rate, against 0.093 and 29.6%
+   after stage 2 and 0.089 and 28.7% for v1's user-based model as shipped, on the same
    held-out ratings.
 4. Demo, done: [saricmilos.com/projects/book-recommender](https://www.saricmilos.com/projects/book-recommender),
-   with no server. Pick a book and see the ten books v2 recommends to its readers, or the ten
-   v1's API returned.
+   with no server. It opens on what v1 recommended to readers of *The Cat in the Hat* (Stephen
+   King's *It* and *Misery* among them) beside what v2 does; pick any book to compare the two.
 
 ## Data
 

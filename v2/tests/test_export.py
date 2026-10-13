@@ -29,11 +29,34 @@ def test_tidy_case(raw, shown):
 
 
 def test_short_description_ends_on_a_sentence():
-    text = "One. " + "A sentence of some length goes here. " * 20
+    text = "One. " + " ".join(f"The sentence {n} of this text is here." for n in range(20))
     short = export.short_description(text, limit=100)
     assert len(short) <= 100 and short.endswith(".")
-    assert export.short_description("Short.") == "Short."
+    assert export.short_description("A short one for the shelf.") == "A short one for the shelf."
     assert export.short_description(None) is None
+
+
+def test_is_english_compares_common_words():
+    assert export.is_english("The story of a boy and his dog, who live by the sea.")
+    assert not export.is_english("Le Petit Prince est une œuvre de langue française, la plus connue de Saint-Exupéry.")
+    assert not export.is_english("Die erfolgreiche Fotografin hat ihr Leben im Griff, und sie ist auf der Insel.")
+
+
+def test_plain_text_drops_markdown_and_lists_of_other_books():
+    raw = "**Book Two** in the [Dune Chronicles][1].\r\n\r\nPaul *continues*.\r\n----------\r\nAlso contained in: [Dune](/works/OL1W)"
+    assert export.plain_text(raw) == "Book Two in the Dune Chronicles.\n\nPaul continues."
+
+
+def test_short_description_keeps_english_paragraphs_and_drops_what_the_shops_left():
+    rose = "It is the year 1327. Monks are dying.\n\nUltima settimana del novembre 1327. Il novizio Adso da Melk accompagna frate Guglielmo."
+    assert export.short_description(rose) == "It is the year 1327. Monks are dying."
+    grisham = "John Grisham's bestselling backlist repackaged with fantastic new coversRay Atlee is a professor of law.He has a father."
+    assert export.short_description(grisham) == "Ray Atlee is a professor of law. He has a father."
+    assert export.short_description("A man reads to her. Until he stops. A man reads to her. Until he stops.") == (
+        "A man reads to her. Until he stops."
+    )
+    assert export.short_description("Kurzbeschreibung\n\nDie Tochter des Magiers ist eine Novelle von Nora Roberts.") is None
+    assert export.short_description("Awesome") is None
 
 
 def test_first_distinct_keeps_one_per_key_and_never_the_book_itself():
