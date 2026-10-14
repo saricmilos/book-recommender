@@ -10,7 +10,7 @@ cd v2
 python -m venv .venv
 .venv/Scripts/activate          # Windows; on macOS or Linux: source .venv/bin/activate
 pip install -e ".[test]"
-pytest                          # 132 tests, under 3 minutes, v1's re-run included
+pytest                          # 135 tests, under 3 minutes, v1's re-run included
 python -m bookrec.evaluate      # about 25 minutes: writes the reports in reports/ and data/books.csv
 python -m bookrec.export        # about 2 minutes: writes the demo's data into the site
 ```
