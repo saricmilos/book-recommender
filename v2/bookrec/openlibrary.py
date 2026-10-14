@@ -8,9 +8,11 @@ stages read that file and never the network.
 
 First, the work of every rated edition's ISBN goes to data/isbn_works.csv (committed), which
 stage 2 reads to join books that are one work (books.join_same_works); the details are then
-fetched for the books as joined.
+fetched for the books as joined. Last, each book's cover picture goes to
+data/openlibrary-cache/covers/, for export.py to make the demo's small copies from.
 
-    python -m bookrec.openlibrary        # about 45 minutes the first time, at 1 request/second
+    python -m bookrec.openlibrary        # about 45 minutes the first time, at 1 request/second,
+                                         # and as long again for the covers
 """
 
 from __future__ import annotations
@@ -19,11 +21,13 @@ import hashlib
 import json
 import re
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -42,6 +46,9 @@ SEARCH = "https://openlibrary.org/search.json"
 SEARCH_FIELDS = "key,title,author_name,first_publish_year,cover_i,subject,isbn"
 CACHE = DATA / "openlibrary-cache"
 DETAILS = DATA / "book_details.jsonl"
+COVERS = CACHE / "covers"
+COVER = "https://covers.openlibrary.org/b/id/{}-M.jpg?default=false"  # about 180 pixels wide
+COVERS_AT_ONCE = 4  # archive.org, which serves them, can take 20 seconds a picture
 
 Fetch = Callable[[str], tuple[int, object]]  # url -> (HTTP status, parsed JSON or None)
 
@@ -347,6 +354,69 @@ def isbn_ratings_by_book() -> tuple[pd.DataFrame, dict[int, list[tuple[str, int]
     return books[["title", "author"]], pairs
 
 
+def fetch_cover(cover_id: int, attempts: int = 5) -> bytes | None:
+    """One cover picture, or None when Open Library has no cover by that ID. Covers are served
+    from archive.org, which is slow and sometimes fails, so server errors and timeouts are
+    retried."""
+    request = urllib.request.Request(COVER.format(cover_id), headers={"User-Agent": USER_AGENT})
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, timeout=90) as response:
+                return response.read()
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            if e.code != 429 and e.code < 500:
+                raise
+            delay = float(e.headers.get("Retry-After") or 5 * 2**attempt)
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            delay = 5 * 2**attempt
+        time.sleep(min(delay, 120))
+    raise RuntimeError(f"No answer for cover {cover_id} after {attempts} attempts")
+
+
+def fetch_covers(
+    cover_ids: Iterable[int],
+    directory: Path = COVERS,
+    rate: float = REQUESTS_PER_SECOND,
+    at_once: int = COVERS_AT_ONCE,
+    fetch: Callable[[int], bytes | None] = fetch_cover,
+) -> dict[str, int]:
+    """Every cover not already in `directory` (<id>.jpg), starting at most `rate` requests a
+    second with up to `at_once` waiting for an answer. A cover Open Library doesn't have is
+    remembered (an empty <id>.none) and not asked for again; one that failed is asked for on the
+    next run. Returns how many were fetched, missing, failed and already there."""
+    directory.mkdir(parents=True, exist_ok=True)
+    ids = list(dict.fromkeys(cover_ids))
+    todo = [i for i in ids if not (directory / f"{i}.jpg").exists() and not (directory / f"{i}.none").exists()]
+    counts = {"fetched": 0, "missing": 0, "failed": 0, "cached": len(ids) - len(todo)}
+    lock, start = threading.Lock(), [0.0]
+
+    def one(cover_id: int) -> str:
+        with lock:  # the requests start `rate` a second apart, whatever the answers take
+            wait = start[0] + 1.0 / rate - time.monotonic()
+            start[0] = time.monotonic() + max(wait, 0.0)
+        if wait > 0:
+            time.sleep(wait)
+        try:
+            picture = fetch(cover_id)
+        except Exception as e:  # noqa: BLE001: a cover that fails is retried on the next run
+            print(f"  cover {cover_id}: {e}", file=sys.stderr)
+            return "failed"
+        if picture is None:
+            (directory / f"{cover_id}.none").touch()
+            return "missing"
+        (directory / f"{cover_id}.jpg").write_bytes(picture)
+        return "fetched"
+
+    with ThreadPoolExecutor(max_workers=at_once) as pool:
+        for n, outcome in enumerate(pool.map(one, todo), 1):
+            counts[outcome] += 1
+            if n % 200 == 0:
+                print(f"  covers: {n:,} of {len(todo):,}", file=sys.stderr)
+    return counts
+
+
 def main() -> None:
     split = load_split()
     isbns = sorted(set(split.train["isbn"]) | set(split.test["isbn"]))
@@ -357,6 +427,8 @@ def main() -> None:
     records = details(client, books, pairs, by_isbn)
     write_details(records)
     print(f"Wrote {ISBN_WORKS} and {DETAILS} ({len(records):,} books, {client.requests:,} requests)")
+    covers = fetch_covers(r["cover_id"] for r in records if r["cover_id"])
+    print(f"Covers in {COVERS}: " + ", ".join(f"{v:,} {k}" for k, v in covers.items()))
 
 
 if __name__ == "__main__":

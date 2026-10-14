@@ -5,7 +5,9 @@ stage 3 blend, at the settings its report chose, trained on all interactions), a
 v1's API returns for it (its own table, v1/models/topk_item_sim.npz), plus each book's title,
 author, year, cover and a short description. Written as JSON into the site's
 src/content/book-recommender/, which the page loads on demand. Also the page's table of results
-and the numbers behind its "What the data showed" (findings.py).
+and the numbers behind its "What the data showed" (findings.py), and the covers, as small
+pictures in the site's public/book-recommender/covers/, so the site serves them itself instead
+of archive.org, which is slow (openlibrary.py fetches them once).
 
 Two display rules, not model changes: a list shows one edition of a book (same_book_keys),
 and v2 never recommends Wild Animus (never_recommended says why); the evaluation is as the
@@ -24,6 +26,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 from bookrec import findings, openlibrary, text, topn
 from bookrec.books import SPELLED_OUT, author_key, book_rows, clean_split, clean_title, title_key
@@ -34,6 +37,9 @@ from bookrec.paths import REPO, REPORTS
 
 SITE = Path(os.environ.get("BOOKREC_SITE", REPO.parents[1] / "sites" / "saricmilos.com"))
 OUT = SITE / "src" / "content" / "book-recommender"
+COVERS_OUT = SITE / "public" / "book-recommender" / "covers"
+COVER_WIDTH = 180  # the page shows a cover at most about 90 pixels wide: sharp at twice that
+COVER_QUALITY = 72
 N = 10
 DESCRIPTION_CHARS = 420
 
@@ -271,10 +277,40 @@ def v1_similar(keys: list[str], n: int = N) -> list[list[int]]:
     return out
 
 
-def export(out: Path = OUT) -> dict:
+def write_covers(cover_ids: set[int], out: Path = COVERS_OUT, cache: Path = openlibrary.COVERS) -> set[int]:
+    """Each cover in the Open Library cache as a WebP at most COVER_WIDTH wide, named by its
+    cover ID; a cover the cache lacks keeps the copy the site has, and covers no book uses any
+    more are removed. Returns the cover IDs the site has, so a book without one shows the cover
+    set in type at once instead of asking for a picture that isn't there."""
+    out.mkdir(parents=True, exist_ok=True)
+    have = set()
+    for cover_id in sorted(cover_ids):
+        source, target = cache / f"{cover_id}.jpg", out / f"{cover_id}.webp"
+        if source.exists():
+            try:
+                with Image.open(source) as picture:
+                    picture = picture.convert("RGB")
+                    if picture.width < 10:  # a placeholder, not a cover
+                        continue
+                    if picture.width > COVER_WIDTH:
+                        height = round(picture.height * COVER_WIDTH / picture.width)
+                        picture = picture.resize((COVER_WIDTH, height), Image.Resampling.LANCZOS)
+                    picture.save(target, "WEBP", quality=COVER_QUALITY, method=6)
+            except OSError:  # not a picture
+                continue
+        if target.exists():
+            have.add(cover_id)
+    for old in out.glob("*.webp"):
+        if old.stem.isdigit() and int(old.stem) not in cover_ids:
+            old.unlink()
+    return have
+
+
+def export(out: Path = OUT, covers_out: Path = COVERS_OUT) -> dict:
     data = load_interactions()
     records = openlibrary.read_details()
     readers = data.popularity()
+    on_site = write_covers({r["cover_id"] for r in records if r["cover_id"] and r["title"] not in WRONG_WORKS}, covers_out)
     books = []
     descriptions = {}
     for r in records:
@@ -284,7 +320,7 @@ def export(out: Path = OUT) -> dict:
                 display_title(r["title"]),
                 tidy_case(clean_title(r["author"])),
                 r["first_publish_year"] if trusted else None,
-                r["cover_id"] if trusted else None,
+                r["cover_id"] if trusted and r["cover_id"] in on_site else None,
                 int(readers[r["book_id"]]),
             ]
         )
@@ -304,7 +340,9 @@ def export(out: Path = OUT) -> dict:
     }
     for name, content in files.items():
         (out / name).write_text(json.dumps(content, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    return {name: (out / name).stat().st_size for name in files}
+    sizes = {name: (out / name).stat().st_size for name in files}
+    sizes[f"{len(on_site):,} covers"] = sum(f.stat().st_size for f in covers_out.glob("*.webp"))
+    return sizes
 
 
 def wilson(p: float, n: int, z: float = 1.96) -> tuple[float, float]:

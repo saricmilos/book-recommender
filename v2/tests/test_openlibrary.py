@@ -192,3 +192,33 @@ def test_details_end_to_end(tmp_path):
     again = fake_client({}, tmp_path)
     assert ol.details(again, books, {0: [("0451524934", 59)], 1: [("9999999999", 3)]}) == records
     assert again.seen == []
+
+
+def test_fetch_covers_keeps_each_answer_and_asks_again_only_for_failures(tmp_path):
+    asked = []
+
+    def fetch(cover_id):
+        asked.append(cover_id)
+        if cover_id == 2:
+            return None  # Open Library has no such cover
+        if cover_id == 3:
+            raise RuntimeError("502")
+        return b"jpeg"
+
+    counts = ol.fetch_covers([1, 2, 3, 1], directory=tmp_path, rate=1000, fetch=fetch)
+    assert counts == {"fetched": 1, "missing": 1, "failed": 1, "cached": 0}
+    assert (tmp_path / "1.jpg").read_bytes() == b"jpeg" and (tmp_path / "2.none").exists()
+    assert sorted(asked) == [1, 2, 3]  # 1 once, though listed twice
+
+    asked.clear()
+    counts = ol.fetch_covers([1, 2, 3], directory=tmp_path, rate=1000, fetch=fetch)
+    assert asked == [3] and counts["cached"] == 2
+
+
+def test_fetch_covers_starts_requests_at_the_rate(tmp_path):
+    import time
+
+    started = []
+    ol.fetch_covers(range(4), directory=tmp_path, rate=20, fetch=lambda i: started.append(time.monotonic()) or b"x")
+    gaps = [b - a for a, b in zip(sorted(started), sorted(started)[1:])]
+    assert min(gaps) >= 0.04  # 20 a second is 0.05 apart, give or take the clock

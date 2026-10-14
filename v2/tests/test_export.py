@@ -89,3 +89,22 @@ def test_list_stats():
     stats = export.list_stats(similar, ["a", "b", "c"])
     assert stats["v1"] == {"most_listed": "c", "most_listed_share": 1.0, "books_listed": 3}
     assert stats["v2"]["most_listed_share"] == pytest.approx(2 / 3)
+
+
+def test_write_covers(tmp_path):
+    from PIL import Image
+
+    cache, out = tmp_path / "cache", tmp_path / "out"
+    cache.mkdir()
+    out.mkdir()
+    Image.new("RGB", (400, 600), "red").save(cache / "1.jpg")  # a cover, made smaller
+    Image.new("RGB", (1, 1)).save(cache / "2.jpg")  # a placeholder pixel
+    (cache / "3.jpg").write_bytes(b"not a picture")
+    (out / "4.webp").write_bytes(b"kept: the cache doesn't have it")
+    (out / "5.webp").write_bytes(b"no book uses it")
+
+    have = export.write_covers({1, 2, 3, 4, 6}, out=out, cache=cache)
+    assert have == {1, 4}
+    with Image.open(out / "1.webp") as picture:
+        assert picture.size == (export.COVER_WIDTH, 270)
+    assert not (out / "5.webp").exists() and not (out / "2.webp").exists()

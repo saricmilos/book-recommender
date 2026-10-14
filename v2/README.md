@@ -18,7 +18,9 @@ python -m bookrec.export        # about 2 minutes: writes the demo's data into t
 Book details were fetched once from [Open Library](https://openlibrary.org) with
 `python -m bookrec.openlibrary` (about 45 minutes at 1 request a second) and are committed in
 `data/book_details.jsonl`, with the Open Library work of every rated edition in
-`data/isbn_works.csv`, so nothing above needs the network.
+`data/isbn_works.csv`, so nothing above needs the network. The same run keeps each book's
+cover picture in the gitignored `data/openlibrary-cache/covers/`, from which the export makes
+the small copies the site serves; without that folder the export keeps the site's copies.
 
 ## Stages
 
@@ -121,7 +123,9 @@ cosine table's variety rather than the dot-product table's bestsellers.
 runs with no server. `bookrec/export.py` works out, for each of the 2,366 books, the ten books
 the blend recommends to a reader of that book (trained on all interactions, at the settings
 the stage 3 report chose) and the ten v1's API returned for it, and writes them, with each
-book's title, author, year, Open Library cover and a short description, into the site. The page
+book's title, author, year, Open Library cover (a 180-pixel WebP copy the site serves
+itself, since archive.org, which serves Open Library's, is slow) and a short description, into
+the site. The page
 opens on both lists for a reader of *The Cat in the Hat*, where v1's ten hold Stephen King's
 *It* and *Misery* and v2's open with five Dr. Seuss books, and a visitor can search for any
 other book; the site fails to build if v1's ten for it ever stop holding those two. The export
