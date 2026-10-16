@@ -333,7 +333,8 @@ def export(out: Path = OUT, covers_out: Path = COVERS_OUT) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     files = {
         "books.json": {"fields": ["title", "author", "year", "cover", "readers"], "books": books},
-        "similar.json": similar,
+        # The site's demo shows the blend's lists only; v1's are still counted in results.json's "lists"
+        "similar.json": {"v2": similar["v2"]},
         "descriptions.json": descriptions,
         "results.json": {**results(), "lists": list_stats(similar, [b[0] for b in books])},
         "findings.json": named_findings(findings.findings(data), books),
