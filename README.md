@@ -3,13 +3,13 @@
 Book recommendations learned from the Book-Crossing ratings: 1,149,780 ratings by 278,858 users
 on 271,360 books (Kaggle, *Book Recommendation Dataset*).
 
-The repository holds two versions of the project. **v1** is kept exactly as I built it by hand.
+The repository holds two versions of the project. **v1** is kept exactly as I built it.
 **v2** is being built beside it, on the same data, and will be measured against
 v1 on the same test split.
 
 | | v1 | v2 |
 |---|---|---|
-| Built | by hand, November 2025 to early 2026 | from October 2026 |
+| Built | November 2025 to early 2026 | from October 2026 |
 | Code | [`v1/`](v1/), and tag [`v1.0`](https://github.com/saricmilos/book-recommender/tree/v1.0) for the original layout | [`v2/`](v2/) |
 | Status | frozen | in progress |
 
